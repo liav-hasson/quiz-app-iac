@@ -1,0 +1,14 @@
+# Ignore Terraform local files and caches
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# Ignore provider plugins and downloads
+terraform/.terraform/
+
+# Other common ignores
+.idea/
+*.iml
+venv/
+__pycache__/
