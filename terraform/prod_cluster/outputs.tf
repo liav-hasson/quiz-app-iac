@@ -33,7 +33,7 @@ output "cluster_certificate_authority_data" {
 # OIDC Provider
 output "cluster_oidc_issuer_url" {
   description = "The URL on the EKS cluster OIDC Issuer"
-  value       = module.eks_cluster.oidc_provider_arn
+  value       = module.eks_cluster.cluster_oidc_issuer_url
 }
 
 output "oidc_provider_arn" {
@@ -92,12 +92,22 @@ output "alb_security_group_id" {
   value       = module.alb.alb_security_group_id
 }
 
-output "quiz_app_target_group_arn" {
-  description = "ARN of the quiz app target group for TargetGroupBinding"
-  value       = module.alb.quiz_app_target_group_arn
+output "quiz_backend_target_group_arn" {
+  description = "ARN of the quiz backend target group for TargetGroupBinding"
+  value       = module.alb.quiz_backend_target_group_arn
+}
+
+output "quiz_frontend_target_group_arn" {
+  description = "ARN of the quiz frontend target group for TargetGroupBinding"
+  value       = module.alb.quiz_frontend_target_group_arn
 }
 
 output "argocd_target_group_arn" {
   description = "ARN of the ArgoCD target group for TargetGroupBinding"
   value       = module.alb.argocd_target_group_arn
+}
+
+output "quiz_app_target_group_arn" {
+  description = "(Deprecated) ARN of the quiz app target group"
+  value       = module.alb.quiz_app_target_group_arn
 }

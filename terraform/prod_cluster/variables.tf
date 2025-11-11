@@ -61,3 +61,38 @@ variable "certificate_arn" {
   description = "ARN of the ACM certificate for HTTPS listener"
   type        = string
 }
+
+variable "enable_https" {
+  description = "Whether to provision HTTPS listeners on the ALB"
+  type        = bool
+  default     = true
+}
+
+variable "quiz_app_host" {
+  description = "Fully qualified hostname for the quiz application"
+  type        = string
+  default     = ""
+}
+
+variable "quiz_backend_path_patterns" {
+  description = "Path patterns that should route to the quiz backend service"
+  type        = list(string)
+  default     = ["/api/*"]
+}
+
+variable "argocd_host" {
+  description = "Fully qualified hostname for ArgoCD"
+  type        = string
+  default     = ""
+}
+
+variable "jenkins_host" {
+  description = "Fully qualified hostname for Jenkins"
+  type        = string
+  default     = ""
+}
+
+variable "ebs_csi_driver_role_arn" {
+  description = "IAM role ARN for EBS CSI driver service account (IRSA)"
+  type        = string
+}

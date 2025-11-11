@@ -11,12 +11,11 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Script is at: quiz-app/iac/scripts/management/lib/operations/apply
-# Go up 5 levels to reach quiz-app/iac/
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../../.." && pwd)"
-TERRAFORM_ROOT="$PROJECT_ROOT/terraform"
-# GitOps is at quiz-app/gitops (one level up from iac, then into gitops)
-GITOPS_ROOT="$(cd "$PROJECT_ROOT/../gitops" && pwd)"
+# Resolve paths relative to the script without touching global PROJECT_ROOT from config-loader
+APPLY_LIB_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+IAC_ROOT="$(cd "$APPLY_LIB_ROOT/../.." && pwd)"
+TERRAFORM_ROOT="$IAC_ROOT/terraform"
+GITOPS_ROOT="$(cd "$IAC_ROOT/../gitops" && pwd)"
 
 # Source helpers
 source "$SCRIPT_DIR/../../helpers/logging-helpers.sh" 2>/dev/null || {
@@ -40,8 +39,10 @@ inject_terraform_values() {
     log_info "Fetching Terraform outputs..."
     ALB_ROLE=$(terraform output -raw alb_controller_role_arn 2>/dev/null || echo "")
     ESO_ROLE=$(terraform output -raw external_secrets_role_arn 2>/dev/null || echo "")
+    EBS_CSI_ROLE=$(terraform output -raw ebs_csi_driver_role_arn 2>/dev/null || echo "")
     CERT_ARN=$(terraform output -raw acm_certificate_arn 2>/dev/null || echo "")
-    TG_ARN=$(terraform output -raw quiz_app_target_group_arn 2>/dev/null || echo "")
+    BACKEND_TG_ARN=$(terraform output -raw quiz_backend_target_group_arn 2>/dev/null || echo "")
+    FRONTEND_TG_ARN=$(terraform output -raw quiz_frontend_target_group_arn 2>/dev/null || echo "")
     ARGOCD_TG_ARN=$(terraform output -raw argocd_target_group_arn 2>/dev/null || echo "")
     ALB_SG_ID=$(terraform output -raw alb_security_group_id 2>/dev/null || echo "")
     
@@ -56,8 +57,10 @@ inject_terraform_values() {
     log_info "Terraform outputs:"
     log_info "  ALB Controller Role ARN: $ALB_ROLE"
     log_info "  External Secrets Role ARN: $ESO_ROLE"
+    log_info "  EBS CSI Driver Role ARN: $EBS_CSI_ROLE"
     log_info "  ACM Certificate ARN: $CERT_ARN"
-    log_info "  Quiz App Target Group ARN: $TG_ARN"
+    log_info "  Quiz Backend Target Group ARN: $BACKEND_TG_ARN"
+    log_info "  Quiz Frontend Target Group ARN: $FRONTEND_TG_ARN"
     log_info "  ArgoCD Target Group ARN: $ARGOCD_TG_ARN"
     log_info "  ALB Security Group ID: $ALB_SG_ID"
     
@@ -74,27 +77,37 @@ inject_terraform_values() {
     sed -i "s|value: \".*\" # Injected by Terraform|value: \"$ESO_ROLE\" # Injected by Terraform|g" \
       applications/external-secrets.yaml
     
-    # Update quiz-app values (replace any existing value)
-    if [[ -n "$TG_ARN" ]]; then
-        log_info "Updating Quiz App TargetGroupBinding ARN..."
-        sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$TG_ARN\" # Injected by Terraform|g" \
-          quiz-app/values.yaml
+    # Update quiz-backend values (replace any existing value)
+  if [[ -n "$BACKEND_TG_ARN" ]]; then
+        log_info "Updating Quiz Backend TargetGroupBinding ARN..."
+    sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$BACKEND_TG_ARN\" # Injected by Terraform|g" \
+          quiz-backend/values.yaml
     fi
+
+  if [[ -n "$FRONTEND_TG_ARN" ]]; then
+    log_info "Updating Quiz Frontend TargetGroupBinding ARN..."
+    sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$FRONTEND_TG_ARN\" # Injected by Terraform|g" \
+      quiz-frontend/values.yaml
+  fi
     
     # Update ArgoCD TargetGroupBinding (replace any existing value)
     if [[ -n "$ARGOCD_TG_ARN" ]]; then
         log_info "Updating ArgoCD TargetGroupBinding ARN..."
         sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$ARGOCD_TG_ARN\" # Injected by Terraform|g" \
-          argocd/argocd-targetgroupbinding.yaml
+          prerequisites/argocd-targetgroupbinding.yaml
     fi
     
-    # Update security group IDs in both files (replace any existing value)
+    # Update security group IDs (replace any existing value)
     if [[ -n "$ALB_SG_ID" ]]; then
         log_info "Updating ALB Security Group IDs..."
         sed -i "s|groupID: \".*\" # Injected by Terraform|groupID: \"$ALB_SG_ID\" # Injected by Terraform|g" \
-          quiz-app/values.yaml \
-          argocd/argocd-targetgroupbinding.yaml
+          quiz-backend/values.yaml \
+          quiz-frontend/values.yaml \
+          prerequisites/argocd-targetgroupbinding.yaml
     fi
+    
+    # Note: EBS CSI Driver role is managed directly in Terraform addon resource
+    log_info "EBS CSI Driver role configured in Terraform (not injected into GitOps)"
     
     log_success "✓ Terraform values injected into GitOps files"
     

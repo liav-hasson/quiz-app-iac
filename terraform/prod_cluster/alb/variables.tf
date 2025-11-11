@@ -39,3 +39,33 @@ variable "jenkins_instance_id" {
   description = "Jenkins EC2 instance ID for target group attachment"
   type        = string
 }
+
+variable "enable_https" {
+  description = "Toggle HTTPS listener creation"
+  type        = bool
+  default     = true
+}
+
+variable "quiz_app_host" {
+  description = "Hostname that should route to the quiz application"
+  type        = string
+  default     = ""
+}
+
+variable "quiz_backend_path_patterns" {
+  description = "Path patterns that should route to the quiz backend service"
+  type        = list(string)
+  default     = ["/api/*"]
+}
+
+variable "argocd_host" {
+  description = "Hostname that should route to ArgoCD"
+  type        = string
+  default     = ""
+}
+
+variable "jenkins_host" {
+  description = "Hostname that should route to Jenkins"
+  type        = string
+  default     = ""
+}

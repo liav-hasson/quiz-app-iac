@@ -23,9 +23,19 @@ output "alb_security_group_id" {
   value       = aws_security_group.alb.id
 }
 
+output "quiz_backend_target_group_arn" {
+  description = "ARN of the quiz backend target group for TargetGroupBinding"
+  value       = aws_lb_target_group.quiz_backend.arn
+}
+
+output "quiz_frontend_target_group_arn" {
+  description = "ARN of the quiz frontend target group for TargetGroupBinding"
+  value       = aws_lb_target_group.quiz_frontend.arn
+}
+
 output "quiz_app_target_group_arn" {
-  description = "ARN of the quiz app target group for TargetGroupBinding"
-  value       = aws_lb_target_group.quiz_app.arn
+  description = "(Deprecated) ARN of the quiz app target group"
+  value       = aws_lb_target_group.quiz_backend.arn
 }
 
 output "argocd_target_group_arn" {

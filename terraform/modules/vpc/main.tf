@@ -38,14 +38,14 @@ module "subnets" {
 module "nat_instance" {
   source = "./nat-instance"
 
-  public_subnet_id      = module.subnets.public_subnet_ids[0] # First public subnet
-  vpc_id                = module.vpc_core.vpc_id
-  private_subnet_cidrs  = var.private_subnet_cidrs
-  environment           = var.environment
-  project_name          = var.project_name
-  nat_ami_id            = var.nat_ami_id
-  instance_type         = var.nat_instance_type
-  volume_size           = var.nat_volume_size
+  public_subnet_id     = module.subnets.public_subnet_ids[0] # First public subnet
+  vpc_id               = module.vpc_core.vpc_id
+  private_subnet_cidrs = var.private_subnet_cidrs
+  environment          = var.environment
+  project_name         = var.project_name
+  nat_ami_id           = var.nat_ami_id
+  instance_type        = var.nat_instance_type
+  volume_size          = var.nat_volume_size
 }
 
 # Route Tables

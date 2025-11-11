@@ -206,6 +206,12 @@ variable "quiz_app_subdomain" {
   default     = ""
 }
 
+variable "quiz_backend_path_patterns" {
+  description = "Path patterns that should be routed to the quiz backend service"
+  type        = list(string)
+  default     = ["/api/*"]
+}
+
 variable "argocd_subdomain" {
   description = "Full subdomain for ArgoCD (e.g., argocd.example.com)"
   type        = string

@@ -7,10 +7,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# PROJECT_ROOT is quiz-app/iac, repository root is two levels up (Leumi-project/)
-PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/../../../../" && pwd)}"
-REPO_ROOT="$(cd "$PROJECT_ROOT/../.." && pwd)"
+IAC_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/../../../../" && pwd)}"
 
+# For split repository: quiz-app is one level up from iac/
+REPO_ROOT="$(cd "$IAC_ROOT/.." && pwd)"
 
 # Color codes for output
 RED='\033[0;31m'

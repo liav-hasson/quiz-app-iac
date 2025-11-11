@@ -6,17 +6,17 @@
 module "vpc" {
   source = "./modules/vpc"
 
-  vpc_name              = var.vpc_name
-  vpc_cidr              = var.vpc_cidr
-  availability_zones    = var.availability_zones
-  public_subnet_cidrs   = var.public_subnet_cidrs
-  private_subnet_cidrs  = var.private_subnet_cidrs
-  environment           = var.environment
-  project_name          = var.project_name
-  nat_ami_id            = var.nat_ami_id
-  nat_instance_type     = var.nat_instance_type
-  nat_volume_size       = var.nat_volume_size
-  eks_cluster_name      = var.eks_cluster_name
+  vpc_name             = var.vpc_name
+  vpc_cidr             = var.vpc_cidr
+  availability_zones   = var.availability_zones
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  environment          = var.environment
+  project_name         = var.project_name
+  nat_ami_id           = var.nat_ami_id
+  nat_instance_type    = var.nat_instance_type
+  nat_volume_size      = var.nat_volume_size
+  eks_cluster_name     = var.eks_cluster_name
 }
 
 # IAM Module
@@ -28,7 +28,7 @@ module "iam" {
   eks_cluster_arn      = module.prod_cluster.cluster_arn
   oidc_provider_arn    = module.prod_cluster.oidc_provider_arn
   ssm_parameter_prefix = var.ssm_parameter_prefix
-  
+
   # SA namespaces
   alb_service_account_name      = var.alb_service_account_name
   alb_service_account_namespace = var.alb_service_account_namespace
@@ -74,12 +74,12 @@ module "route53" {
   common_tags         = var.common_tags
 
   # Public DNS & ACM Certificate (certificate created independently)
-  public_zone_enabled  = var.public_zone_enabled
-  public_zone_id       = var.public_zone_id
-  public_domain        = var.public_domain
-  quiz_app_subdomain   = var.quiz_app_subdomain
-  argocd_subdomain     = var.argocd_subdomain
-  jenkins_subdomain    = var.jenkins_subdomain
+  public_zone_enabled = var.public_zone_enabled
+  public_zone_id      = var.public_zone_id
+  public_domain       = var.public_domain
+  quiz_app_subdomain  = var.quiz_app_subdomain
+  argocd_subdomain    = var.argocd_subdomain
+  jenkins_subdomain   = var.jenkins_subdomain
 }
 
 # Production EKS Cluster  
@@ -97,11 +97,19 @@ module "prod_cluster" {
   kubernetes_version = var.kubernetes_version
   node_groups        = var.eks_node_groups
   # Certificate from route53 module - Route53 DNS records are now optional if ALB not ready
-  certificate_arn    = module.route53.acm_certificate_arn
+  certificate_arn            = module.route53.acm_certificate_arn
+  quiz_app_host              = var.quiz_app_subdomain
+  quiz_backend_path_patterns = var.quiz_backend_path_patterns
+  argocd_host                = var.argocd_subdomain
+  jenkins_host               = var.jenkins_subdomain
+  enable_https               = var.public_zone_enabled
 
   # Cross-module security group references
   jenkins_security_group_id = module.security_groups.jenkins_security_group_id
   jenkins_instance_id       = module.jenkins.instance_id
+  
+  # EBS CSI Driver IRSA
+  ebs_csi_driver_role_arn   = module.iam.ebs_csi_driver_role_arn
 
   # Tags
   tags = merge(

@@ -47,7 +47,7 @@ resource "aws_route53_record" "jenkins" {
 # Data source to reference the existing public hosted zone
 data "aws_route53_zone" "public" {
   count = var.public_zone_enabled ? 1 : 0
-  
+
   zone_id = var.public_zone_id
 }
 
@@ -55,8 +55,8 @@ data "aws_route53_zone" "public" {
 # Validates via DNS in the public hosted zone
 resource "aws_acm_certificate" "main" {
   count = var.public_zone_enabled ? 1 : 0
-  
-  domain_name       = var.quiz_app_subdomain
+
+  domain_name = var.quiz_app_subdomain
   subject_alternative_names = [
     var.argocd_subdomain,
     var.jenkins_subdomain
@@ -96,7 +96,7 @@ resource "aws_route53_record" "cert_validation" {
 # Wait for certificate validation to complete
 resource "aws_acm_certificate_validation" "main" {
   count = var.public_zone_enabled ? 1 : 0
-  
+
   certificate_arn         = aws_acm_certificate.main[0].arn
   validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
 }

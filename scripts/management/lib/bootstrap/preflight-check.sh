@@ -11,9 +11,8 @@ set -euo pipefail
 
 # Resolve paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# The script lives in: Leumi-project/quiz-app/iac/scripts/management/lib/bootstrap
-# Workspace root is six levels up from this file to reach Leumi-project/
-WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../../../../.." && pwd)"
+# Resolve workspace root relative to current script without assuming monorepo structure
+WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 DEPS_FILE="$WORKSPACE_ROOT/configs/project-dependencies.txt"
 
 # Color codes for output

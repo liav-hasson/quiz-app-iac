@@ -15,3 +15,8 @@ variable "cluster_version" {
   type        = string
   # no default here so the parent module must pass a value
 }
+
+variable "ebs_csi_driver_role_arn" {
+  description = "IAM role ARN for EBS CSI driver service account (IRSA)"
+  type        = string
+}

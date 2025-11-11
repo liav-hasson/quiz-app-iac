@@ -105,6 +105,11 @@ output "external_secrets_role_arn" {
   value       = module.iam.external_secrets_role_arn
 }
 
+output "ebs_csi_driver_role_arn" {
+  description = "IAM role ARN for EBS CSI Driver IRSA"
+  value       = module.iam.ebs_csi_driver_role_arn
+}
+
 # =============================================================================
 # Application Load Balancer Outputs
 # =============================================================================
@@ -134,8 +139,18 @@ output "alb_security_group_id" {
   value       = module.prod_cluster.alb_security_group_id
 }
 
+output "quiz_backend_target_group_arn" {
+  description = "ARN of the quiz backend target group for TargetGroupBinding"
+  value       = module.prod_cluster.quiz_backend_target_group_arn
+}
+
+output "quiz_frontend_target_group_arn" {
+  description = "ARN of the quiz frontend target group for TargetGroupBinding"
+  value       = module.prod_cluster.quiz_frontend_target_group_arn
+}
+
 output "quiz_app_target_group_arn" {
-  description = "ARN of the quiz app target group for TargetGroupBinding"
+  description = "(Deprecated) ARN of the quiz app target group"
   value       = module.prod_cluster.quiz_app_target_group_arn
 }
 

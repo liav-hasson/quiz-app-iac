@@ -27,14 +27,14 @@ private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
 # =============================================================================
 # NAT Instance Configuration (for cost savings vs NAT Gateway)
 # =============================================================================
-nat_ami_id        = "ami-087612fa932c8f075"  # NAT golden AMI
+nat_ami_id        = "ami-087612fa932c8f075" # NAT golden AMI
 nat_instance_type = "t3.micro"
 nat_volume_size   = 8
 
 # =============================================================================
 # Jenkins Controller Configuration
 # =============================================================================
-jenkins_ami_id        = "ami-0a83c166f673df4de"  # Jenkins golden AMI
+jenkins_ami_id        = "ami-0a83c166f673df4de" # Jenkins golden AMI
 jenkins_instance_type = "t3.small"
 jenkins_volume_size   = 12
 
@@ -88,12 +88,12 @@ ssm_parameter_prefix = "/devops-quiz"
 private_domain_name = "weatherlabs.internal"
 
 # Public hosted zone (external DNS)
-public_zone_enabled   = true
-public_zone_id        = "Z06307832TD07PZVN77GO"  # weatherlabs.org hosted zone
-public_domain         = "weatherlabs.org"
-quiz_app_subdomain    = "quiz.weatherlabs.org"   # Quiz app public URL
-argocd_subdomain      = "argocd.weatherlabs.org" # ArgoCD public URL
-jenkins_subdomain     = "jenkins.weatherlabs.org" # Jenkins public URL
+public_zone_enabled = true
+public_zone_id      = "Z06307832TD07PZVN77GO" # weatherlabs.org hosted zone
+public_domain       = "weatherlabs.org"
+quiz_app_subdomain  = "quiz.weatherlabs.org"    # Quiz app public URL
+argocd_subdomain    = "argocd.weatherlabs.org"  # ArgoCD public URL
+jenkins_subdomain   = "jenkins.weatherlabs.org" # Jenkins public URL
 
 # =============================================================================
 # Tags

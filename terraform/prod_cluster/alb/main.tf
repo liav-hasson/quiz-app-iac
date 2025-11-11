@@ -5,6 +5,10 @@
 # ArgoCD will reference this ALB by its name via annotations
 
 # Security Group for ALB
+locals {
+  enable_https = var.enable_https
+}
+
 resource "aws_security_group" "alb" {
   name_prefix = "${var.project_name}-alb-"
   description = "Security group for Application Load Balancer"
@@ -57,8 +61,8 @@ resource "aws_lb" "main" {
   security_groups    = [aws_security_group.alb.id]
   subnets            = var.public_subnet_ids
 
-  enable_deletion_protection = var.enable_deletion_protection
-  enable_http2              = true
+  enable_deletion_protection       = var.enable_deletion_protection
+  enable_http2                     = true
   enable_cross_zone_load_balancing = true
 
   tags = merge(
@@ -97,13 +101,43 @@ resource "aws_lb_target_group" "default" {
   )
 }
 
-# Quiz App Target Group (managed via TargetGroupBinding)
-resource "aws_lb_target_group" "quiz_app" {
-  name        = "${var.project_name}-quiz-app-tg"
+# Quiz Backend Target Group (managed via TargetGroupBinding)
+resource "aws_lb_target_group" "quiz_backend" {
+  name        = "${var.project_name}-quiz-backend-tg"
   port        = 5000
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"  # Required for EKS with IP mode
+  target_type = "ip" # Required for EKS with IP mode
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 30
+    path                = "/api/health"
+    protocol            = "HTTP"
+    matcher             = "200"
+    port                = "traffic-port"
+  }
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-quiz-backend-tg"
+      # Required for TargetGroupBinding to discover this target group
+      "elbv2.k8s.aws/cluster" = var.cluster_name
+    }
+  )
+}
+
+# Quiz Frontend Target Group (managed via TargetGroupBinding)
+resource "aws_lb_target_group" "quiz_frontend" {
+  name        = "${var.project_name}-quiz-frontend-tg"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
 
   health_check {
     enabled             = true
@@ -113,15 +147,14 @@ resource "aws_lb_target_group" "quiz_app" {
     interval            = 30
     path                = "/"
     protocol            = "HTTP"
-    matcher             = "200"
+    matcher             = "200-399"
     port                = "traffic-port"
   }
 
   tags = merge(
     var.common_tags,
     {
-      Name = "${var.project_name}-quiz-app-tg"
-      # Required for TargetGroupBinding to discover this target group
+      Name                    = "${var.project_name}-quiz-frontend-tg"
       "elbv2.k8s.aws/cluster" = var.cluster_name
     }
   )
@@ -134,7 +167,7 @@ resource "aws_lb_target_group" "argocd" {
   port        = 8080
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"  # Required for EKS with IP mode
+  target_type = "ip" # Required for EKS with IP mode
 
   health_check {
     enabled             = true
@@ -144,7 +177,7 @@ resource "aws_lb_target_group" "argocd" {
     interval            = 30
     path                = "/healthz"
     protocol            = "HTTP"
-    matcher             = "200-399"  # Accept redirects (ArgoCD returns 307)
+    matcher             = "200-399" # Accept redirects (ArgoCD returns 307)
     port                = "traffic-port"
   }
 
@@ -165,7 +198,7 @@ resource "aws_lb_target_group" "jenkins" {
   port        = 8080
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "instance"  # EC2 instance
+  target_type = "instance" # EC2 instance
 
   health_check {
     enabled             = true
@@ -196,6 +229,7 @@ resource "aws_lb_target_group_attachment" "jenkins" {
 
 # HTTP Listener (redirects to HTTPS)
 resource "aws_lb_listener" "http" {
+  count             = local.enable_https ? 1 : 0
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
   protocol          = "HTTP"
@@ -211,8 +245,21 @@ resource "aws_lb_listener" "http" {
   }
 }
 
+resource "aws_lb_listener" "http_passthrough" {
+  count             = local.enable_https ? 0 : 1
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.quiz_frontend.arn
+  }
+}
+
 # HTTPS Listener
 resource "aws_lb_listener" "https" {
+  count             = local.enable_https ? 1 : 0
   load_balancer_arn = aws_lb.main.arn
   port              = "443"
   protocol          = "HTTPS"
@@ -231,33 +278,66 @@ resource "aws_lb_listener" "https" {
   }
 }
 
-# HTTPS Listener Rule for Quiz App
-resource "aws_lb_listener_rule" "quiz_app" {
-  listener_arn = aws_lb_listener.https.arn
-  priority     = 100
+# HTTPS Listener Rule for Quiz Backend API
+resource "aws_lb_listener_rule" "quiz_backend_api" {
+  count        = local.enable_https && var.quiz_app_host != "" ? 1 : 0
+  listener_arn = aws_lb_listener.https[0].arn
+  priority     = 110
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.quiz_app.arn
+    target_group_arn = aws_lb_target_group.quiz_backend.arn
   }
 
   condition {
     host_header {
-      values = ["quiz.weatherlabs.org"]
+      values = [var.quiz_app_host]
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = var.quiz_backend_path_patterns
     }
   }
 
   tags = merge(
     var.common_tags,
     {
-      Name = "${var.project_name}-quiz-app-rule"
+      Name = "${var.project_name}-quiz-backend-rule"
+    }
+  )
+}
+
+# HTTPS Listener Rule for Quiz Frontend
+resource "aws_lb_listener_rule" "quiz_frontend" {
+  count        = local.enable_https && var.quiz_app_host != "" ? 1 : 0
+  listener_arn = aws_lb_listener.https[0].arn
+  priority     = 120
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.quiz_frontend.arn
+  }
+
+  condition {
+    host_header {
+      values = [var.quiz_app_host]
+    }
+  }
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-quiz-frontend-rule"
     }
   )
 }
 
 # HTTPS Listener Rule for ArgoCD
 resource "aws_lb_listener_rule" "argocd" {
-  listener_arn = aws_lb_listener.https.arn
+  count        = local.enable_https && var.argocd_host != "" ? 1 : 0
+  listener_arn = aws_lb_listener.https[0].arn
   priority     = 200
 
   action {
@@ -267,7 +347,7 @@ resource "aws_lb_listener_rule" "argocd" {
 
   condition {
     host_header {
-      values = ["argocd.weatherlabs.org"]
+      values = [var.argocd_host]
     }
   }
 
@@ -281,7 +361,8 @@ resource "aws_lb_listener_rule" "argocd" {
 
 # HTTPS Listener Rule for Jenkins
 resource "aws_lb_listener_rule" "jenkins" {
-  listener_arn = aws_lb_listener.https.arn
+  count        = local.enable_https && var.jenkins_host != "" ? 1 : 0
+  listener_arn = aws_lb_listener.https[0].arn
   priority     = 300
 
   action {
@@ -291,7 +372,7 @@ resource "aws_lb_listener_rule" "jenkins" {
 
   condition {
     host_header {
-      values = ["jenkins.weatherlabs.org"]
+      values = [var.jenkins_host]
     }
   }
 

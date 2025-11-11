@@ -37,7 +37,7 @@ output "public_zone_name" {
 output "acm_certificate_arn" {
   description = "ARN of the validated ACM certificate for HTTPS"
   # Reference the validation resource to ensure certificate is fully validated before use
-  value       = var.public_zone_enabled ? aws_acm_certificate_validation.main[0].certificate_arn : ""
+  value = var.public_zone_enabled ? aws_acm_certificate_validation.main[0].certificate_arn : ""
 }
 
 output "quiz_app_url" {

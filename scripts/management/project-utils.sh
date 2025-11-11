@@ -9,20 +9,44 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
-KUBECONFIG_DIR="$PROJECT_ROOT/infrastructure-repo/kubeconfig"
-
 # Load shared configuration and logging
 source "$SCRIPT_DIR/lib/helpers/config-loader.sh"
 source "$SCRIPT_DIR/lib/helpers/logging-helpers.sh"
 
 # Script paths
-SSM_TUNNEL_SCRIPT="$SSM_TUNNELS_SCRIPT"
+SSM_TUNNEL_SCRIPT="${SSM_TUNNELS_SCRIPT:-/dev/null}"
 
-# Static hostnames (from Helm values) - used for display only
-# These match the values in gitops/quiz-app/values.yaml
-readonly QUIZ_APP_HOST="${QUIZ_APP_HOST:-quiz.weatherlabs.org}"
-readonly ARGOCD_HOST="${ARGOCD_HOST:-argocd.weatherlabs.org}"
-readonly JENKINS_INTERNAL_HOST="${JENKINS_INTERNAL_HOST:-jenkins.weatherlabs.internal}"
+# Helper to read Terraform outputs if state exists
+tf_output() {
+    local key="$1"
+    local value=""
+
+    if [[ -d "$TERRAFORM_DIR" ]]; then
+        value=$(cd "$TERRAFORM_DIR" && terraform output -raw "$key" 2>/dev/null || true)
+    fi
+
+    if [[ -n "$value" ]]; then
+        printf '%s' "$value"
+    fi
+}
+
+# Read hostnames from Terraform outputs when available, fallback to defaults
+_quiz_url=$(tf_output quiz_app_url)
+_argocd_url=$(tf_output argocd_url)
+
+if [[ -n "$_quiz_url" ]]; then
+    _quiz_host="${_quiz_url#https://}"
+    _quiz_host="${_quiz_host#/}"
+fi
+
+if [[ -n "$_argocd_url" ]]; then
+    _argocd_host="${_argocd_url#https://}"
+    _argocd_host="${_argocd_host#/}"
+fi
+
+QUIZ_APP_HOST="${QUIZ_APP_HOST:-${_quiz_host:-quiz.weatherlabs.org}}"
+ARGOCD_HOST="${ARGOCD_HOST:-${_argocd_host:-argocd.weatherlabs.org}}"
+JENKINS_INTERNAL_HOST="${JENKINS_INTERNAL_HOST:-jenkins.weatherlabs.internal}"
 
 echo_line() { printf "%s\n" "$*"; }
 

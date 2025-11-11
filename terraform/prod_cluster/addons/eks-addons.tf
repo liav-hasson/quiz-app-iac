@@ -43,6 +43,22 @@ resource "aws_eks_addon" "kube_proxy" {
   }
 }
 
+# EBS CSI Driver - Persistent volume support for EBS
+resource "aws_eks_addon" "ebs_csi_driver" {
+  cluster_name                = var.cluster_name
+  addon_name                  = "aws-ebs-csi-driver"
+  addon_version               = data.aws_eks_addon_version.ebs_csi_driver.version
+  service_account_role_arn    = var.ebs_csi_driver_role_arn
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  depends_on = [aws_eks_addon.vpc_cni]
+
+  tags = {
+    Name = "${var.cluster_name}-ebs-csi-driver"
+  }
+}
+
 # Data sources to get latest addon versions
 data "aws_eks_addon_version" "vpc_cni" {
   addon_name         = "vpc-cni"
@@ -58,6 +74,12 @@ data "aws_eks_addon_version" "coredns" {
 
 data "aws_eks_addon_version" "kube_proxy" {
   addon_name         = "kube-proxy"
+  kubernetes_version = var.cluster_version
+  most_recent        = true
+}
+
+data "aws_eks_addon_version" "ebs_csi_driver" {
+  addon_name         = "aws-ebs-csi-driver"
   kubernetes_version = var.cluster_version
   most_recent        = true
 }
