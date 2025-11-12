@@ -94,6 +94,7 @@ public_domain       = "weatherlabs.org"
 quiz_app_subdomain  = "quiz.weatherlabs.org"    # Quiz app public URL
 argocd_subdomain    = "argocd.weatherlabs.org"  # ArgoCD public URL
 jenkins_subdomain   = "jenkins.weatherlabs.org" # Jenkins public URL
+grafana_subdomain   = "grafana.weatherlabs.org" # Grafana public URL
 
 # =============================================================================
 # Tags

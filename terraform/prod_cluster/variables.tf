@@ -92,6 +92,12 @@ variable "jenkins_host" {
   default     = ""
 }
 
+variable "grafana_host" {
+  description = "Fully qualified hostname for Grafana"
+  type        = string
+  default     = ""
+}
+
 variable "ebs_csi_driver_role_arn" {
   description = "IAM role ARN for EBS CSI driver service account (IRSA)"
   type        = string

@@ -159,6 +159,11 @@ output "argocd_target_group_arn" {
   value       = module.prod_cluster.argocd_target_group_arn
 }
 
+output "grafana_target_group_arn" {
+  description = "ARN of the Grafana target group for TargetGroupBinding"
+  value       = module.prod_cluster.grafana_target_group_arn
+}
+
 # =============================================================================
 # DNS & Certificate Outputs
 # =============================================================================

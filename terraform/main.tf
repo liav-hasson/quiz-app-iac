@@ -102,14 +102,15 @@ module "prod_cluster" {
   quiz_backend_path_patterns = var.quiz_backend_path_patterns
   argocd_host                = var.argocd_subdomain
   jenkins_host               = var.jenkins_subdomain
+  grafana_host               = var.grafana_subdomain
   enable_https               = var.public_zone_enabled
 
   # Cross-module security group references
   jenkins_security_group_id = module.security_groups.jenkins_security_group_id
   jenkins_instance_id       = module.jenkins.instance_id
-  
+
   # EBS CSI Driver IRSA
-  ebs_csi_driver_role_arn   = module.iam.ebs_csi_driver_role_arn
+  ebs_csi_driver_role_arn = module.iam.ebs_csi_driver_role_arn
 
   # Tags
   tags = merge(

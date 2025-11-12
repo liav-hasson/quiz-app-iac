@@ -107,6 +107,11 @@ output "argocd_target_group_arn" {
   value       = module.alb.argocd_target_group_arn
 }
 
+output "grafana_target_group_arn" {
+  description = "ARN of the Grafana target group for TargetGroupBinding"
+  value       = module.alb.grafana_target_group_arn
+}
+
 output "quiz_app_target_group_arn" {
   description = "(Deprecated) ARN of the quiz app target group"
   value       = module.alb.quiz_app_target_group_arn

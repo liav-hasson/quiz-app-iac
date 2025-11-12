@@ -69,3 +69,9 @@ variable "jenkins_host" {
   type        = string
   default     = ""
 }
+
+variable "grafana_host" {
+  description = "Hostname that should route to Grafana"
+  type        = string
+  default     = ""
+}

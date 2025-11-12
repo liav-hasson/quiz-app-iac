@@ -28,10 +28,10 @@ module "node_groups" {
 module "addons" {
   source = "./addons"
 
-  cluster_name              = module.eks_cluster.cluster_name
-  cluster_version           = var.kubernetes_version
-  vpc_id                    = var.vpc_id
-  ebs_csi_driver_role_arn   = var.ebs_csi_driver_role_arn
+  cluster_name            = module.eks_cluster.cluster_name
+  cluster_version         = var.kubernetes_version
+  vpc_id                  = var.vpc_id
+  ebs_csi_driver_role_arn = var.ebs_csi_driver_role_arn
 
   depends_on = [module.eks_cluster, module.node_groups]
 }
@@ -65,6 +65,7 @@ module "alb" {
   quiz_backend_path_patterns = var.quiz_backend_path_patterns
   argocd_host                = var.argocd_host
   jenkins_host               = var.jenkins_host
+  grafana_host               = var.grafana_host
   enable_https               = var.enable_https
 
   depends_on = [module.eks_cluster, module.node_groups]

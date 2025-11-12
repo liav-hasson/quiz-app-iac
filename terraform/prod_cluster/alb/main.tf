@@ -227,6 +227,35 @@ resource "aws_lb_target_group_attachment" "jenkins" {
   port             = 8080
 }
 
+# Grafana Target Group (managed via TargetGroupBinding)
+resource "aws_lb_target_group" "grafana" {
+  name        = "${var.project_name}-grafana-tg"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 30
+    path                = "/api/health"
+    protocol            = "HTTP"
+    matcher             = "200"
+    port                = "traffic-port"
+  }
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name                    = "${var.project_name}-grafana-tg"
+      "elbv2.k8s.aws/cluster" = var.cluster_name
+    }
+  )
+}
+
 # HTTP Listener (redirects to HTTPS)
 resource "aws_lb_listener" "http" {
   count             = local.enable_https ? 1 : 0
@@ -380,6 +409,31 @@ resource "aws_lb_listener_rule" "jenkins" {
     var.common_tags,
     {
       Name = "${var.project_name}-jenkins-rule"
+    }
+  )
+}
+
+# HTTPS Listener Rule for Grafana
+resource "aws_lb_listener_rule" "grafana" {
+  count        = local.enable_https && var.grafana_host != "" ? 1 : 0
+  listener_arn = aws_lb_listener.https[0].arn
+  priority     = 400
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.grafana.arn
+  }
+
+  condition {
+    host_header {
+      values = [var.grafana_host]
+    }
+  }
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-grafana-rule"
     }
   )
 }

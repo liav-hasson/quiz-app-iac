@@ -224,6 +224,12 @@ variable "jenkins_subdomain" {
   default     = ""
 }
 
+variable "grafana_subdomain" {
+  description = "Full subdomain for Grafana (e.g., grafana.example.com)"
+  type        = string
+  default     = ""
+}
+
 # =============================================================================
 # Tags
 # =============================================================================
