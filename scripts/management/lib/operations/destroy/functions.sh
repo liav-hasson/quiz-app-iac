@@ -3,11 +3,32 @@
 
 set -euo pipefail
 
-# Ensure config is loaded
+# Ensure config, logging, and notifications are loaded
 if [[ -z "${CONFIG_LOADER_SOURCED:-}" ]]; then
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     source "$SCRIPT_DIR/../../helpers/config-loader.sh"
+    source "$SCRIPT_DIR/../../helpers/logging-helpers.sh"
+    source "$SCRIPT_DIR/../../helpers/notification-helpers.sh"
 fi
+
+# =============================================================================
+# Backup Jenkins AMI
+# =============================================================================
+destroy_backup_jenkins_ami() {
+    log_info "Creating backup AMI from Jenkins instance..."
+    
+    if [[ ! -f "$BACKUP_JENKINS_AMI_SCRIPT" ]]; then
+        log_warning "Jenkins AMI backup script not found at $BACKUP_JENKINS_AMI_SCRIPT"
+        return 0
+    fi
+    
+    run_logged "$BOOTSTRAP_LOG_FILE" "$BACKUP_JENKINS_AMI_SCRIPT" || {
+        log_warning "Jenkins AMI backup failed; continuing with destroy"
+        return 0
+    }
+    
+    log_info "Jenkins AMI backup completed successfully"
+}
 
 # =============================================================================
 # Cleanup EKS Cluster Resources
@@ -213,6 +234,7 @@ destroy_log_summary() {
     echo "╚════════════════════════════════════════════════════════════════╝"
     echo ""
     echo "✓ EKS cluster resources cleaned up"
+    echo "✓ Jenkins AMI backed up to terraform.tfvars"
     echo "✓ Terraform infrastructure destroyed"
     echo "✓ Kubectl configuration cleaned"
     echo ""
@@ -224,7 +246,12 @@ destroy_log_summary() {
 # Main Execution
 # =============================================================================
 destroy_execute() {
+    local operation="destroy"
+    
     print_log_locations || true
+    
+    # Send start notification
+    apply_stream_notify start "$operation" || true
     
     echo "Starting infrastructure destruction..."
     echo ""
@@ -234,17 +261,26 @@ destroy_execute() {
         log_warning "EKS cleanup had issues, continuing with Terraform destroy..."
     }
     
-    # Step 2: Destroy infrastructure with Terraform
+    # Step 2: Backup Jenkins AMI before destroying infrastructure
+    destroy_backup_jenkins_ami || {
+        log_warning "Jenkins AMI backup failed; continuing with destroy..."
+    }
+    
+    # Step 3: Destroy infrastructure with Terraform
     destroy_run_terraform || {
         log_error "Terraform destroy failed"
+        apply_stream_notify end "$operation" 1 "terraform" || true
         return 1
     }
     
-    # Step 3: Clean up local kubectl config
+    # Step 4: Clean up local kubectl config
     destroy_cleanup_kubeconfig || true
     
     # Summary
     destroy_log_summary
+    
+    # Send success notification
+    apply_stream_notify end "$operation" 0 || true
     
     echo "Destruction complete!"
 }

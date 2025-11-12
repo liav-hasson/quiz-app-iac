@@ -77,13 +77,13 @@ EOF
         local operation_display message
         if [[ "$operation" == "apply" ]]; then
             operation_display="Deployment"
-            message="Infrastructure provisioning started (Terraform + Kubespray)\n\n_Application deployments will be handled by ArgoCD_"
+            message="Infrastructure provisioning started!"
         else
             operation_display="Destruction"
-            message="Infrastructure teardown started\n\n_GitLab AMI backup will be created_"
+            message="Infrastructure teardown started\n\n_Jenkins AMI backup will be created_"
         fi
         
-        send_slack_notification "🚀 WeatherLabs Infrastructure $operation_display Started" \
+        send_slack_notification "WeatherLabs Infrastructure $operation_display Started" \
             "$message\n\nStarted: $start_timestamp" \
             "#FFA500"  # Orange
     fi
@@ -130,7 +130,7 @@ end_operation() {
         if [[ "$operation" == "apply" ]]; then
             operation_display="Deployment"
             if [[ "$exit_code" == "0" ]]; then
-                message="Infrastructure provisioning completed successfully (VPC, EC2, EKS, Kubespray)\n\n_ArgoCD is now watching Git and will auto-deploy applications_"
+                message="Infrastructure provisioning completed successfully"
             else
                 message="Infrastructure provisioning failed"
                 if [[ -n "$failed_step" ]]; then

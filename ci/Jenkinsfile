@@ -1,0 +1,69 @@
+pipeline {
+    agent {
+        kubernetes {
+            yaml '''
+                apiVersion: v1
+                kind: Pod
+                metadata:
+                  name: infra-agent
+                  labels:
+                    jenkins/label: infra-agent
+                spec:
+                  containers:
+                  - name: jnlp
+                    image: liavvv/infra-agent:1.0
+                    imagePullPolicy: Always
+                    tty: true
+                    command:
+                    - "jenkins-agent"
+            '''
+        }
+    }
+
+    environment {
+        TF_DIR      = 'terraform'
+        SCRIPTS_DIR = 'scripts'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+                sh 'echo "✅ Source code checked out"'
+            }
+        }
+
+        stage('Terraform Validation') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh '''
+                        echo "🔍 Running Terraform validation..."
+                        terraform init -backend=false
+                        terraform fmt -check
+                        terraform validate
+                    '''
+                }
+            }
+        }
+
+        stage('Bash Validation (ShellCheck)') {
+            steps {
+                // Run shellcheck across the whole repository
+                sh '''
+                    echo "Running ShellCheck on Bash scripts across the repo..."
+                    find . -type f -name "*.sh" -exec shellcheck {} +
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed."
+        }
+        failure {
+            echo "One or more validations failed."
+        }
+    }
+}
