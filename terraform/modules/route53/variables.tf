@@ -71,4 +71,8 @@ variable "jenkins_subdomain" {
   default     = ""
 }
 
-# Note: ALB DNS records moved to main.tf to break circular dependency
+variable "grafana_subdomain" {
+  description = "Subdomain for Grafana (e.g., grafana.example.com)"
+  type        = string
+  default     = ""
+}

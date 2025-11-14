@@ -80,6 +80,7 @@ module "route53" {
   quiz_app_subdomain  = var.quiz_app_subdomain
   argocd_subdomain    = var.argocd_subdomain
   jenkins_subdomain   = var.jenkins_subdomain
+  grafana_subdomain   = var.grafana_subdomain
 }
 
 # Production EKS Cluster  
@@ -177,3 +178,20 @@ resource "aws_route53_record" "jenkins_alb" {
 
   depends_on = [module.prod_cluster]
 }
+
+# Grafana DNS record
+resource "aws_route53_record" "grafana_alb" {
+  count   = var.public_zone_enabled ? 1 : 0
+  zone_id = data.aws_route53_zone.public_for_alb[0].zone_id
+  name    = var.grafana_subdomain
+  type    = "A"
+
+  alias {
+    name                   = module.prod_cluster.alb_dns_name
+    zone_id                = module.prod_cluster.alb_zone_id
+    evaluate_target_health = true
+  }
+
+  depends_on = [module.prod_cluster]
+}
+
