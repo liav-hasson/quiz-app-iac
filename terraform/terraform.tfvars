@@ -34,7 +34,7 @@ nat_volume_size   = 8
 # =============================================================================
 # Jenkins Controller Configuration
 # =============================================================================
-jenkins_ami_id        = "ami-0a83c166f673df4de" # Jenkins golden AMI
+jenkins_ami_id        = "ami-00def717d1f296aaf" # Jenkins golden AMI
 jenkins_instance_type = "t3.small"
 jenkins_volume_size   = 12
 
@@ -47,7 +47,7 @@ kubernetes_version = "1.31"
 # EKS Node Groups Configuration
 eks_node_groups = {
   general = {
-    desired_size   = 2
+    desired_size   = 3
     min_size       = 1
     max_size       = 4
     instance_types = ["t3.medium"]
