@@ -1,6 +1,7 @@
 # Quiz-app Infrastructure As Code
 
-####
+This repository contains Terraform IaC that deployes the entire framework of the project.
+Additionally, I use Bash scripting to manage infrastructure deployment, extracting data and sending notifications.
 
 ---
 
@@ -15,3 +16,7 @@ All the code is fully open source, and contains 5 main repositories:
 - **[GitOps repository](https://github.com/liav-hasson/quiz-app-gitops.git)** - ArgoCD App-of-app pattern.
 - **[IaC repository](https://github.com/liav-hasson/quiz-app-iac.git) << You are here!** - Terraform creates oll the base infrastructure, on AWS.
 - **[Mini-version repository](https://github.com/liav-hasson/quiz-app-mini.git)** - Allows you to self-host localy, or on AWS.
+
+## Terraform
+
+## Bash Scripts

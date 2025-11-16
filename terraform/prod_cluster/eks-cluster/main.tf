@@ -21,6 +21,13 @@ module "eks" {
 
   create_cluster_security_group = true
 
+  # Disable control-plane CloudWatch logging by default to avoid automatic
+  # creation of CloudWatch log groups and ingestion (cost). If you want
+  # control-plane logs enabled later, set `cluster_enabled_log_types` to a
+  # non-empty list (eg. ["api", "audit"]).
+  cluster_enabled_log_types   = []
+  create_cloudwatch_log_group = false
+
   cluster_security_group_additional_rules = {
     ingress_nodes_443 = {
       description                = "Node groups to cluster API"

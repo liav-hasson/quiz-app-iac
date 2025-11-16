@@ -165,6 +165,33 @@ destroy_cleanup_eks_cluster() {
     helm uninstall argocd -n argocd --timeout=5m 2>&1 | tee -a "$HELM_LOG_FILE" || {
         log_warning "Failed to uninstall ArgoCD"
     }
+    
+    # Step 5: Delete application namespaces to trigger PVC cleanup
+    log_info "Deleting application namespaces to clean up PVCs..."
+    for ns in monitoring quiz-backend quiz-frontend jenkins; do
+        if kubectl get namespace "$ns" &>/dev/null; then
+            log_info "Deleting namespace: $ns"
+            kubectl delete namespace "$ns" --timeout=2m 2>&1 | tee -a "$HELM_LOG_FILE" || {
+                log_warning "Failed to delete namespace $ns, forcing..."
+                kubectl delete namespace "$ns" --grace-period=0 --force 2>&1 | tee -a "$HELM_LOG_FILE" || true
+            }
+        fi
+    done
+    
+    # Wait for PVs with Delete policy to be cleaned up
+    log_info "Waiting for dynamic PVs to be deleted..."
+    local max_wait=60
+    local waited=0
+    while [[ $waited -lt $max_wait ]]; do
+        local remaining=$(kubectl get pv -o json 2>/dev/null | jq -r '.items[] | select(.spec.persistentVolumeReclaimPolicy=="Delete") | .metadata.name' | wc -l)
+        if [[ $remaining -eq 0 ]]; then
+            log_info "All dynamic PVs deleted"
+            break
+        fi
+        log_info "Waiting for $remaining PVs to be deleted... ($waited/$max_wait seconds)"
+        sleep 5
+        waited=$((waited + 5))
+    done
 
     log_info "EKS cluster cleanup complete"
 }

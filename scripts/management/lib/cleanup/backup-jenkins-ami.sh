@@ -58,7 +58,7 @@ get_jenkins_instance() {
     step "Getting Jenkins instance information..."
     
     local region="${AWS_REGION:-eu-north-1}"
-    local instance_name="quiz-app-jenkins"
+    local instance_name="devops-quiz-jenkins"
     
     # Find the Jenkins instance
     JENKINS_INSTANCE_ID=$(aws ec2 describe-instances \
