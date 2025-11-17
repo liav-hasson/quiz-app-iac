@@ -3,8 +3,6 @@ resource "aws_security_group" "nat_instance" {
   name_prefix = "${var.project_name}-nat-instance-${var.environment}-"
   vpc_id      = var.vpc_id
 
-  # Allow traffic from private subnets - SSH access via SSM only
-
   ingress {
     description = "HTTP from private subnets"
     from_port   = 80
