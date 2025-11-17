@@ -160,6 +160,70 @@ resource "aws_lb_target_group" "quiz_frontend" {
   )
 }
 
+# =============================================================================
+# DEV Environment Target Groups
+# =============================================================================
+
+# Quiz Backend DEV Target Group (managed via TargetGroupBinding)
+resource "aws_lb_target_group" "quiz_backend_dev" {
+  name        = "${var.project_name}-backend-dev-tg"
+  port        = 5000
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 30
+    path                = "/api/health"
+    protocol            = "HTTP"
+    matcher             = "200"
+    port                = "traffic-port"
+  }
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name                    = "${var.project_name}-backend-dev-tg"
+      Environment             = "dev"
+      "elbv2.k8s.aws/cluster" = var.cluster_name
+    }
+  )
+}
+
+# Quiz Frontend DEV Target Group (managed via TargetGroupBinding)
+resource "aws_lb_target_group" "quiz_frontend_dev" {
+  name        = "${var.project_name}-frontend-dev-tg"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 30
+    path                = "/"
+    protocol            = "HTTP"
+    matcher             = "200-399"
+    port                = "traffic-port"
+  }
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name                    = "${var.project_name}-frontend-dev-tg"
+      Environment             = "dev"
+      "elbv2.k8s.aws/cluster" = var.cluster_name
+    }
+  )
+}
+
 # ArgoCD Target Group (managed via TargetGroupBinding)
 # ArgoCD runs HTTP on port 8080, ALB terminates TLS
 resource "aws_lb_target_group" "argocd" {
@@ -359,6 +423,68 @@ resource "aws_lb_listener_rule" "quiz_frontend" {
     var.common_tags,
     {
       Name = "${var.project_name}-quiz-frontend-rule"
+    }
+  )
+}
+
+# =============================================================================
+# DEV Environment Listener Rules
+# =============================================================================
+
+# HTTPS Listener Rule for Quiz Backend DEV API
+resource "aws_lb_listener_rule" "quiz_backend_dev_api" {
+  count        = local.enable_https && var.quiz_app_dev_host != "" ? 1 : 0
+  listener_arn = aws_lb_listener.https[0].arn
+  priority     = 130
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.quiz_backend_dev.arn
+  }
+
+  condition {
+    host_header {
+      values = [var.quiz_app_dev_host]
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = var.quiz_backend_path_patterns
+    }
+  }
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name        = "${var.project_name}-quiz-backend-dev-rule"
+      Environment = "dev"
+    }
+  )
+}
+
+# HTTPS Listener Rule for Quiz Frontend DEV
+resource "aws_lb_listener_rule" "quiz_frontend_dev" {
+  count        = local.enable_https && var.quiz_app_dev_host != "" ? 1 : 0
+  listener_arn = aws_lb_listener.https[0].arn
+  priority     = 140
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.quiz_frontend_dev.arn
+  }
+
+  condition {
+    host_header {
+      values = [var.quiz_app_dev_host]
+    }
+  }
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name        = "${var.project_name}-quiz-frontend-dev-rule"
+      Environment = "dev"
     }
   )
 }

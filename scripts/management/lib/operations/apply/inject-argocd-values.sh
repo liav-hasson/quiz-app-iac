@@ -43,6 +43,8 @@ inject_terraform_values() {
     CERT_ARN=$(terraform output -raw acm_certificate_arn 2>/dev/null || echo "")
     BACKEND_TG_ARN=$(terraform output -raw quiz_backend_target_group_arn 2>/dev/null || echo "")
     FRONTEND_TG_ARN=$(terraform output -raw quiz_frontend_target_group_arn 2>/dev/null || echo "")
+    BACKEND_DEV_TG_ARN=$(terraform output -raw quiz_backend_dev_target_group_arn 2>/dev/null || echo "")
+    FRONTEND_DEV_TG_ARN=$(terraform output -raw quiz_frontend_dev_target_group_arn 2>/dev/null || echo "")
     ARGOCD_TG_ARN=$(terraform output -raw argocd_target_group_arn 2>/dev/null || echo "")
     GRAFANA_TG_ARN=$(terraform output -raw grafana_target_group_arn 2>/dev/null || echo "")
     ALB_SG_ID=$(terraform output -raw alb_security_group_id 2>/dev/null || echo "")
@@ -62,6 +64,8 @@ inject_terraform_values() {
     log_info "  ACM Certificate ARN: $CERT_ARN"
     log_info "  Quiz Backend Target Group ARN: $BACKEND_TG_ARN"
     log_info "  Quiz Frontend Target Group ARN: $FRONTEND_TG_ARN"
+    log_info "  Quiz Backend DEV Target Group ARN: $BACKEND_DEV_TG_ARN"
+    log_info "  Quiz Frontend DEV Target Group ARN: $FRONTEND_DEV_TG_ARN"
     log_info "  ArgoCD Target Group ARN: $ARGOCD_TG_ARN"
     log_info "  Grafana Target Group ARN: $GRAFANA_TG_ARN"
     log_info "  ALB Security Group ID: $ALB_SG_ID"
@@ -91,6 +95,20 @@ inject_terraform_values() {
     sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$FRONTEND_TG_ARN\" # Injected by Terraform|g" \
       quiz-frontend/values.yaml
   fi
+
+    # Update quiz-backend DEV values
+    if [[ -n "$BACKEND_DEV_TG_ARN" ]]; then
+        log_info "Updating Quiz Backend DEV TargetGroupBinding ARN..."
+        sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$BACKEND_DEV_TG_ARN\" # Injected by Terraform|g" \
+          quiz-backend/values-dev.yaml
+    fi
+
+    # Update quiz-frontend DEV values
+    if [[ -n "$FRONTEND_DEV_TG_ARN" ]]; then
+        log_info "Updating Quiz Frontend DEV TargetGroupBinding ARN..."
+        sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$FRONTEND_DEV_TG_ARN\" # Injected by Terraform|g" \
+          quiz-frontend/values-dev.yaml
+    fi
     
     # Update ArgoCD TargetGroupBinding (replace any existing value)
     if [[ -n "$ARGOCD_TG_ARN" ]]; then
@@ -112,6 +130,8 @@ inject_terraform_values() {
         sed -i "s|groupID: \".*\" # Injected by Terraform|groupID: \"$ALB_SG_ID\" # Injected by Terraform|g" \
           quiz-backend/values.yaml \
           quiz-frontend/values.yaml \
+          quiz-backend/values-dev.yaml \
+          quiz-frontend/values-dev.yaml \
           prerequisites/argocd-targetgroupbinding.yaml \
           prerequisites/grafana-targetgroupbinding.yaml
     fi

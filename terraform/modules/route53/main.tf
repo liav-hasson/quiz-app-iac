@@ -58,6 +58,7 @@ resource "aws_acm_certificate" "main" {
 
   domain_name = var.quiz_app_subdomain
   subject_alternative_names = [
+    var.quiz_app_dev_subdomain,
     var.argocd_subdomain,
     var.jenkins_subdomain,
     var.grafana_subdomain

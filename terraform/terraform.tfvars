@@ -34,7 +34,7 @@ nat_volume_size   = 8
 # =============================================================================
 # Jenkins Controller Configuration
 # =============================================================================
-jenkins_ami_id        = "ami-0feab2070f3cc9061" # Jenkins golden AMI
+jenkins_ami_id        = "ami-0ba864e22c0f4fc2c" # Jenkins golden AMI
 jenkins_instance_type = "t3.small"
 jenkins_volume_size   = 12
 
@@ -88,13 +88,14 @@ ssm_parameter_prefix = "/devops-quiz"
 private_domain_name = "weatherlabs.internal"
 
 # Public hosted zone (external DNS)
-public_zone_enabled = true
-public_zone_id      = "Z06307832TD07PZVN77GO" # weatherlabs.org hosted zone
-public_domain       = "weatherlabs.org"
-quiz_app_subdomain  = "quiz.weatherlabs.org"    # Quiz app public URL
-argocd_subdomain    = "argocd.weatherlabs.org"  # ArgoCD public URL
-jenkins_subdomain   = "jenkins.weatherlabs.org" # Jenkins public URL
-grafana_subdomain   = "grafana.weatherlabs.org" # Grafana public URL
+public_zone_enabled     = true
+public_zone_id          = "Z06307832TD07PZVN77GO" # weatherlabs.org hosted zone
+public_domain           = "weatherlabs.org"
+quiz_app_subdomain      = "quiz.weatherlabs.org"     # Quiz app public URL
+quiz_app_dev_subdomain  = "dev-quiz.weatherlabs.org" # Quiz app DEV public URL
+argocd_subdomain        = "argocd.weatherlabs.org"   # ArgoCD public URL
+jenkins_subdomain       = "jenkins.weatherlabs.org"  # Jenkins public URL
+grafana_subdomain       = "grafana.weatherlabs.org"  # Grafana public URL
 
 # =============================================================================
 # Tags

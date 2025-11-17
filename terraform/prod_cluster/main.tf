@@ -62,6 +62,7 @@ module "alb" {
   common_tags                = var.tags
   enable_deletion_protection = false
   quiz_app_host              = var.quiz_app_host
+  quiz_app_dev_host          = var.quiz_app_dev_host
   quiz_backend_path_patterns = var.quiz_backend_path_patterns
   argocd_host                = var.argocd_host
   jenkins_host               = var.jenkins_host

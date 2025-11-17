@@ -164,6 +164,16 @@ output "grafana_target_group_arn" {
   value       = module.prod_cluster.grafana_target_group_arn
 }
 
+output "quiz_backend_dev_target_group_arn" {
+  description = "ARN of the quiz backend DEV target group for TargetGroupBinding"
+  value       = module.prod_cluster.quiz_backend_dev_target_group_arn
+}
+
+output "quiz_frontend_dev_target_group_arn" {
+  description = "ARN of the quiz frontend DEV target group for TargetGroupBinding"
+  value       = module.prod_cluster.quiz_frontend_dev_target_group_arn
+}
+
 # =============================================================================
 # DNS & Certificate Outputs
 # =============================================================================

@@ -206,6 +206,12 @@ variable "quiz_app_subdomain" {
   default     = ""
 }
 
+variable "quiz_app_dev_subdomain" {
+  description = "Full subdomain for quiz application DEV environment (e.g., dev-quiz.example.com)"
+  type        = string
+  default     = ""
+}
+
 variable "quiz_backend_path_patterns" {
   description = "Path patterns that should be routed to the quiz backend service"
   type        = list(string)

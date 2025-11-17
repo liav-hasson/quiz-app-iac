@@ -59,6 +59,12 @@ variable "quiz_app_subdomain" {
   default     = ""
 }
 
+variable "quiz_app_dev_subdomain" {
+  description = "Subdomain for quiz application DEV environment (e.g., dev-quiz.example.com)"
+  type        = string
+  default     = ""
+}
+
 variable "argocd_subdomain" {
   description = "Subdomain for ArgoCD (e.g., argocd.example.com)"
   type        = string

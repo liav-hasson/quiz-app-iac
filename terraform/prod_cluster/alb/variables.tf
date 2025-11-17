@@ -52,6 +52,12 @@ variable "quiz_app_host" {
   default     = ""
 }
 
+variable "quiz_app_dev_host" {
+  description = "Hostname that should route to the quiz application DEV environment"
+  type        = string
+  default     = ""
+}
+
 variable "quiz_backend_path_patterns" {
   description = "Path patterns that should route to the quiz backend service"
   type        = list(string)

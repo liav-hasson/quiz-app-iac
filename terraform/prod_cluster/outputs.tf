@@ -116,3 +116,13 @@ output "quiz_app_target_group_arn" {
   description = "(Deprecated) ARN of the quiz app target group"
   value       = module.alb.quiz_app_target_group_arn
 }
+
+output "quiz_backend_dev_target_group_arn" {
+  description = "ARN of the quiz backend DEV target group for TargetGroupBinding"
+  value       = module.alb.quiz_backend_dev_target_group_arn
+}
+
+output "quiz_frontend_dev_target_group_arn" {
+  description = "ARN of the quiz frontend DEV target group for TargetGroupBinding"
+  value       = module.alb.quiz_frontend_dev_target_group_arn
+}

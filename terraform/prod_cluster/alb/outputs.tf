@@ -52,3 +52,13 @@ output "grafana_target_group_arn" {
   description = "ARN of the Grafana target group for TargetGroupBinding"
   value       = aws_lb_target_group.grafana.arn
 }
+
+output "quiz_backend_dev_target_group_arn" {
+  description = "ARN of the quiz backend DEV target group for TargetGroupBinding"
+  value       = aws_lb_target_group.quiz_backend_dev.arn
+}
+
+output "quiz_frontend_dev_target_group_arn" {
+  description = "ARN of the quiz frontend DEV target group for TargetGroupBinding"
+  value       = aws_lb_target_group.quiz_frontend_dev.arn
+}

@@ -74,13 +74,14 @@ module "route53" {
   common_tags         = var.common_tags
 
   # Public DNS & ACM Certificate (certificate created independently)
-  public_zone_enabled = var.public_zone_enabled
-  public_zone_id      = var.public_zone_id
-  public_domain       = var.public_domain
-  quiz_app_subdomain  = var.quiz_app_subdomain
-  argocd_subdomain    = var.argocd_subdomain
-  jenkins_subdomain   = var.jenkins_subdomain
-  grafana_subdomain   = var.grafana_subdomain
+  public_zone_enabled     = var.public_zone_enabled
+  public_zone_id          = var.public_zone_id
+  public_domain           = var.public_domain
+  quiz_app_subdomain      = var.quiz_app_subdomain
+  quiz_app_dev_subdomain  = var.quiz_app_dev_subdomain
+  argocd_subdomain        = var.argocd_subdomain
+  jenkins_subdomain       = var.jenkins_subdomain
+  grafana_subdomain       = var.grafana_subdomain
 }
 
 # Production EKS Cluster  
@@ -97,9 +98,11 @@ module "prod_cluster" {
   cluster_name       = var.eks_cluster_name
   kubernetes_version = var.kubernetes_version
   node_groups        = var.eks_node_groups
+  
   # Certificate from route53 module - Route53 DNS records are now optional if ALB not ready
   certificate_arn            = module.route53.acm_certificate_arn
   quiz_app_host              = var.quiz_app_subdomain
+  quiz_app_dev_host          = var.quiz_app_dev_subdomain
   quiz_backend_path_patterns = var.quiz_backend_path_patterns
   argocd_host                = var.argocd_subdomain
   jenkins_host               = var.jenkins_subdomain
@@ -184,6 +187,22 @@ resource "aws_route53_record" "grafana_alb" {
   count   = var.public_zone_enabled ? 1 : 0
   zone_id = data.aws_route53_zone.public_for_alb[0].zone_id
   name    = var.grafana_subdomain
+  type    = "A"
+
+  alias {
+    name                   = module.prod_cluster.alb_dns_name
+    zone_id                = module.prod_cluster.alb_zone_id
+    evaluate_target_health = true
+  }
+
+  depends_on = [module.prod_cluster]
+}
+
+# Quiz app DEV DNS record
+resource "aws_route53_record" "quiz_app_dev_alb" {
+  count   = var.public_zone_enabled ? 1 : 0
+  zone_id = data.aws_route53_zone.public_for_alb[0].zone_id
+  name    = var.quiz_app_dev_subdomain
   type    = "A"
 
   alias {
