@@ -12,6 +12,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 # Load shared configuration and logging
 source "$SCRIPT_DIR/lib/helpers/config-loader.sh"
 source "$SCRIPT_DIR/lib/helpers/logging-helpers.sh"
+source "$SCRIPT_DIR/lib/helpers/mongodb-tools.sh"
 
 # Script paths
 SSM_TUNNEL_SCRIPT="${SSM_TUNNELS_SCRIPT:-/dev/null}"
@@ -211,6 +212,25 @@ open_web_uis() {
     fi
 }
 
+# Flag: --mongodb | -m
+# Deploy mongo-express helper for ad-hoc DB troubleshooting
+run_mongodb_helper() {
+    log_message "Launching mongo-express helper..."
+
+    echo_line
+    echo_line "================================="
+    echo_line "Mongo Express Helper"
+    echo_line "================================="
+    echo_line
+
+    if mongo_tools_deploy_mongo_express; then
+        echo_line "mongo-express deployment completed."
+    else
+        echo_line "mongo-express deployment failed. Check $MAIN_LOG_FILE for details."
+        return 1
+    fi
+}
+
 # Flag: --gitlab | -g
 # Show SSM tunnels status (GitLab SSH and Kubernetes API)
 # Triggered by: project-utils --gitlab  (or -g)
@@ -297,7 +317,9 @@ show_help() {
     echo_line "Options:"
     echo_line "  --access,   -a       Show access information (cluster + apps)"
     echo_line "  --argocd,   -r       Show ArgoCD status"
+    echo_line "  --mongodb,  -m       Deploy mongo-express helper in db-tools namespace"
     echo_line "  --jenkins,  -j       Get Jenkins EKS credentials for Kubernetes Cloud"
+    echo_line "  --gitlab,   -g       Show GitLab SSM tunnel status"
     echo_line "  --open,     -o       Open web UIs in browser"
     echo_line "  --help,     -h       Show this help"
     echo_line
@@ -312,8 +334,14 @@ main() {
         "--argocd"|"-r")
             manage_argocd
             ;;
+        "--mongodb"|"-m")
+            run_mongodb_helper
+            ;;
         "--jenkins"|"-j")
             get_jenkins_eks_credentials
+            ;;
+        "--gitlab"|"-g")
+            show_gitlab_tunnel_status
             ;;
         "--open"|"-o")
             open_web_uis

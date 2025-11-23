@@ -59,8 +59,8 @@ apply_bootstrap_argocd() {
 apply_deploy_argocd_applications() {
     local operation="$1"
 
-    log_message "Deploying ArgoCD applications..."
-    
+    log_message "Deploying ArgoCD root application..."
+
     # Ensure kubectl is configured for EKS cluster
     local eks_cluster_name
     eks_cluster_name=$(apply_tf_output eks_cluster_name)
@@ -69,43 +69,25 @@ apply_deploy_argocd_applications() {
         log_error "Failed to switch to EKS cluster context: $eks_cluster_name"
         handle_failure "$operation" 1 "eks_context_switch_argocd_apps"
     fi
-    
-    # Apply ArgoCD Application manifests
-    log_message "Applying ArgoCD Application manifests from $GITOPS_DIR/applications/"
-    
-    if ! run_logged "$ARGOCD_LOG_FILE" kubectl apply -f "$GITOPS_DIR/applications/"; then
-        log_error "Failed to deploy ArgoCD applications"
-        handle_failure "$operation" 1 "argocd_applications_deploy"
+
+    # Deploy the root ArgoCD application
+    local root_app_manifest="$GITOPS_DIR/bootstrap/root-app.yaml"
+    if [[ ! -f "$root_app_manifest" ]]; then
+        log_error "root.yml not found at: $root_app_manifest"
+        handle_failure "$operation" 1 "argocd_root_manifest_missing"
     fi
-    
-    log_message "✓ ArgoCD applications deployed successfully"
-    
-    # Trigger initial sync on jenkins-platform application
-    log_message "Triggering sync for jenkins-platform application..."
-    if kubectl annotate application jenkins-platform -n argocd \
-        argocd.argoproj.io/refresh=normal --overwrite 2>&1 | tee -a "$ARGOCD_LOG_FILE"; then
-        log_message "✓ Refresh triggered - ArgoCD will reconcile jenkins-platform"
-    else
-        log_warning "Could not trigger refresh, relying on periodic reconciliation (3min cycle)"
+
+    log_message "Applying root application manifest: $root_app_manifest"
+    if ! run_logged "$ARGOCD_LOG_FILE" kubectl apply -f "$root_app_manifest"; then
+        log_error "Failed to deploy root ArgoCD application"
+        handle_failure "$operation" 1 "argocd_root_deploy"
     fi
-    
-    # Trigger initial sync on quiz-app application
-    log_message "Triggering sync for quiz-app application..."
-    if kubectl annotate application quiz-app -n argocd \
-        argocd.argoproj.io/refresh=normal --overwrite 2>&1 | tee -a "$ARGOCD_LOG_FILE"; then
-        log_message "✓ Refresh triggered - ArgoCD will reconcile quiz-app"
-    else
-        log_warning "Could not trigger refresh, relying on periodic reconciliation (3min cycle)"
-    fi
-    
+
+    log_message "Root application deployed successfully"
+    log_message "ArgoCD will now automatically discover and sync all applications from Git."
     log_message ""
-    log_message "ArgoCD is now syncing all applications:"
-    log_message "  - aws-load-balancer-controller"
-    log_message "  - external-secrets"
-    log_message "  - jenkins-platform"
-    log_message "  - quiz-app"
+    log_message "Monitor sync status using: kubectl get applications -n argocd"
     log_message ""
-    log_message "Monitor sync status: kubectl get applications -n argocd"
 }
 
 export -f apply_bootstrap_argocd apply_deploy_argocd_applications
