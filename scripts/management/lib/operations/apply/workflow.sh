@@ -23,9 +23,13 @@ apply_execute() {
     # Source: lib/operations/apply/terraform.sh
     apply_configure_prod_cluster "$operation"
     
-    # Inject ESO IRSA role ARN (bootstrap requirement)
-    # Source: lib/operations/apply/inject-eso-role.sh
-    apply_inject_eso_role
+    # Inject Terraform outputs into GitOps manifests (IRSA roles, ALB TG ARNs, etc.)
+    # Source: lib/operations/apply/inject-argocd-values.sh
+    inject_terraform_values
+    
+    # Commit and push injected values to GitOps repository
+    # Source: lib/operations/apply/git.sh
+    apply_commit_injection_changes
     
     # Deploy ArgoCD to EKS cluster
     # Source: lib/operations/apply/argocd.sh
