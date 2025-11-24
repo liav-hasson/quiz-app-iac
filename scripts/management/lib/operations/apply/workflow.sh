@@ -10,10 +10,6 @@ apply_execute() {
 
     # Source: management/lib/helpers/validation-helpers.sh
     run_preflight_check "apply operation"
-    
-    # Check git repository status and prompt for commit/push if needed
-    # Source: lib/helpers/git-helpers.sh
-    apply_git_precheck
 
     # sends start slack message 
     # Source: management/lib/helpers/notification-helpers.sh
@@ -27,17 +23,9 @@ apply_execute() {
     # Source: lib/operations/apply/terraform.sh
     apply_configure_prod_cluster "$operation"
     
-    # Inject Terraform outputs (IRSA ARNs, ACM cert) into GitOps manifests
-    # Source: lib/operations/apply/inject-argocd-values.sh
-    inject_terraform_values "$operation"
-    
-    # Commit and push GitOps injection changes
-    # Source: lib/operations/apply/git.sh
-    apply_commit_injection_changes
-    
-    # Push any deferred git changes (from git precheck)
-    # Source: lib/operations/apply/git.sh
-    apply_push_deferred_changes
+    # Inject ESO IRSA role ARN (bootstrap requirement)
+    # Source: lib/operations/apply/inject-eso-role.sh
+    apply_inject_eso_role
     
     # Deploy ArgoCD to EKS cluster
     # Source: lib/operations/apply/argocd.sh
