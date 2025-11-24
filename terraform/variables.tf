@@ -236,6 +236,12 @@ variable "grafana_subdomain" {
   default     = ""
 }
 
+variable "loki_subdomain" {
+  description = "Full subdomain for Loki (e.g., loki.example.com)"
+  type        = string
+  default     = ""
+}
+
 # =============================================================================
 # Tags
 # =============================================================================

@@ -53,6 +53,11 @@ output "grafana_target_group_arn" {
   value       = aws_lb_target_group.grafana.arn
 }
 
+output "loki_target_group_arn" {
+  description = "ARN of the Loki target group for TargetGroupBinding"
+  value       = aws_lb_target_group.loki.arn
+}
+
 output "quiz_backend_dev_target_group_arn" {
   description = "ARN of the quiz backend DEV target group for TargetGroupBinding"
   value       = aws_lb_target_group.quiz_backend_dev.arn

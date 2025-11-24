@@ -164,6 +164,11 @@ output "grafana_target_group_arn" {
   value       = module.prod_cluster.grafana_target_group_arn
 }
 
+output "loki_target_group_arn" {
+  description = "ARN of the Loki target group for TargetGroupBinding"
+  value       = module.prod_cluster.loki_target_group_arn
+}
+
 output "quiz_backend_dev_target_group_arn" {
   description = "ARN of the quiz backend DEV target group for TargetGroupBinding"
   value       = module.prod_cluster.quiz_backend_dev_target_group_arn

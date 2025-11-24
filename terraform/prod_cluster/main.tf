@@ -67,6 +67,7 @@ module "alb" {
   argocd_host                = var.argocd_host
   jenkins_host               = var.jenkins_host
   grafana_host               = var.grafana_host
+  loki_host                  = var.loki_host
   enable_https               = var.enable_https
 
   depends_on = [module.eks_cluster, module.node_groups]

@@ -107,6 +107,7 @@ module "prod_cluster" {
   argocd_host                = var.argocd_subdomain
   jenkins_host               = var.jenkins_subdomain
   grafana_host               = var.grafana_subdomain
+  loki_host                  = var.loki_subdomain
   enable_https               = var.public_zone_enabled
 
   # Cross-module security group references
@@ -187,6 +188,22 @@ resource "aws_route53_record" "grafana_alb" {
   count   = var.public_zone_enabled ? 1 : 0
   zone_id = data.aws_route53_zone.public_for_alb[0].zone_id
   name    = var.grafana_subdomain
+  type    = "A"
+
+  alias {
+    name                   = module.prod_cluster.alb_dns_name
+    zone_id                = module.prod_cluster.alb_zone_id
+    evaluate_target_health = true
+  }
+
+  depends_on = [module.prod_cluster]
+}
+
+# Loki DNS record
+resource "aws_route53_record" "loki_alb" {
+  count   = var.public_zone_enabled ? 1 : 0
+  zone_id = data.aws_route53_zone.public_for_alb[0].zone_id
+  name    = var.loki_subdomain
   type    = "A"
 
   alias {

@@ -81,3 +81,9 @@ variable "grafana_host" {
   type        = string
   default     = ""
 }
+
+variable "loki_host" {
+  description = "Hostname that should route to Loki"
+  type        = string
+  default     = ""
+}

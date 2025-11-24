@@ -104,6 +104,12 @@ variable "grafana_host" {
   default     = ""
 }
 
+variable "loki_host" {
+  description = "Fully qualified hostname for Loki"
+  type        = string
+  default     = ""
+}
+
 variable "ebs_csi_driver_role_arn" {
   description = "IAM role ARN for EBS CSI driver service account (IRSA)"
   type        = string
