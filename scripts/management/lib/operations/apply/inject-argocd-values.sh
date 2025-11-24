@@ -47,6 +47,7 @@ inject_terraform_values() {
     FRONTEND_DEV_TG_ARN=$(terraform output -raw quiz_frontend_dev_target_group_arn 2>/dev/null || echo "")
     ARGOCD_TG_ARN=$(terraform output -raw argocd_target_group_arn 2>/dev/null || echo "")
     GRAFANA_TG_ARN=$(terraform output -raw grafana_target_group_arn 2>/dev/null || echo "")
+    LOKI_TG_ARN=$(terraform output -raw loki_target_group_arn 2>/dev/null || echo "")
     ALB_SG_ID=$(terraform output -raw alb_security_group_id 2>/dev/null || echo "")
     
     # Validate outputs
@@ -68,6 +69,7 @@ inject_terraform_values() {
     log_info "  Quiz Frontend DEV Target Group ARN: $FRONTEND_DEV_TG_ARN"
     log_info "  ArgoCD Target Group ARN: $ARGOCD_TG_ARN"
     log_info "  Grafana Target Group ARN: $GRAFANA_TG_ARN"
+    log_info "  Loki Target Group ARN: $LOKI_TG_ARN"
     log_info "  ALB Security Group ID: $ALB_SG_ID"
     
     # Change to GitOps directory
@@ -124,6 +126,13 @@ inject_terraform_values() {
           prerequisites/grafana-targetgroupbinding.yaml
     fi
     
+    # Update Loki TargetGroupBinding (replace any existing value)
+    if [[ -n "$LOKI_TG_ARN" ]]; then
+        log_info "Updating Loki TargetGroupBinding ARN..."
+        sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$LOKI_TG_ARN\" # Injected by Terraform|g" \
+          prerequisites/loki-targetgroupbinding.yaml
+    fi
+    
     # Update security group IDs (replace any existing value)
     if [[ -n "$ALB_SG_ID" ]]; then
         log_info "Updating ALB Security Group IDs..."
@@ -133,7 +142,8 @@ inject_terraform_values() {
           quiz-backend/values-dev.yaml \
           quiz-frontend/values-dev.yaml \
           prerequisites/argocd-targetgroupbinding.yaml \
-          prerequisites/grafana-targetgroupbinding.yaml
+          prerequisites/grafana-targetgroupbinding.yaml \
+          prerequisites/loki-targetgroupbinding.yaml
     fi
     
     # Note: EBS CSI Driver role is managed directly in Terraform addon resource
