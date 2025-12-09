@@ -11,6 +11,12 @@ variable "aws_region" {
   default     = "eu-north-1"
 }
 
+variable "aws_profile" {
+  description = "AWS CLI profile to use for authentication"
+  type        = string
+  default     = null  # Uses default credentials if not specified
+}
+
 # =============================================================================
 # Project Configuration
 # =============================================================================

@@ -7,7 +7,8 @@
 # =============================================================================
 # AWS Configuration
 # =============================================================================
-aws_region = "eu-north-1"
+aws_region  = "eu-north-1"
+aws_profile = "liav"  # AWS account 937137607178
 
 # =============================================================================
 # Project Configuration
@@ -27,16 +28,16 @@ private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
 # =============================================================================
 # NAT Instance Configuration (for cost savings vs NAT Gateway)
 # =============================================================================
-nat_ami_id        = "ami-087612fa932c8f075" # NAT golden AMI
+nat_ami_id        = "ami-08e7948040eb1cfc5" # NAT golden AMI
 nat_instance_type = "t3.micro"
 nat_volume_size   = 8
 
 # =============================================================================
 # Jenkins Controller Configuration
 # =============================================================================
-jenkins_ami_id        = "ami-02052e6b2c63a317b" # Jenkins golden AMI
+jenkins_ami_id        = "ami-028b1c44f699e6174" # Jenkins golden AMI
 jenkins_instance_type = "t3.small"
-jenkins_volume_size   = 12
+jenkins_volume_size   = 14
 
 # =============================================================================
 # EKS Cluster Configuration
@@ -89,7 +90,7 @@ private_domain_name = "weatherlabs.internal"
 
 # Public hosted zone (external DNS)
 public_zone_enabled     = true
-public_zone_id          = "Z06307832TD07PZVN77GO" # weatherlabs.org hosted zone
+public_zone_id          = "Z021766126QLMQTJA7Q56" # weatherlabs.org hosted zone
 public_domain           = "weatherlabs.org"
 quiz_app_subdomain      = "quiz.weatherlabs.org"     # Quiz app public URL
 quiz_app_dev_subdomain  = "dev-quiz.weatherlabs.org" # Quiz app DEV public URL
