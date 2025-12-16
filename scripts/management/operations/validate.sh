@@ -19,14 +19,13 @@ validate-charts() {
     log ""
     log "=== Required Manifests ==="
     local required_files=(
-        "applications/argocd-config.yaml"
-    "applications/quiz-backend.yaml"
-    "applications/quiz-frontend.yaml"
-        "applications/aws-load-balancer-controller.yaml"
-        "applications/external-secrets.yaml"
-    "quiz-backend/values.yaml"
-    "quiz-frontend/values.yaml"
-        "argocd/argocd-targetgroupbinding.yaml"
+        "apps/platform/aws-load-balancer-controller.yaml"
+        "apps/platform/external-secrets.yaml"
+        "apps/workloads/quiz-backend.yaml"
+        "apps/workloads/quiz-frontend.yaml"
+        "charts/workloads/quiz-backend/values.yaml"
+        "charts/workloads/quiz-frontend/values.yaml"
+        "charts/platform/prerequisites/argocd-targetgroupbinding.yaml"
     )
 
     local missing=()
@@ -47,9 +46,9 @@ validate-charts() {
     log ""
     log "=== Terraform Injection Markers ==="
     local injected_files=(
-        "$gitops_root/quiz-backend/values.yaml"
-        "$gitops_root/quiz-frontend/values.yaml"
-        "$gitops_root/argocd/argocd-targetgroupbinding.yaml"
+        "$gitops_root/charts/workloads/quiz-backend/values.yaml"
+        "$gitops_root/charts/workloads/quiz-frontend/values.yaml"
+        "$gitops_root/charts/platform/prerequisites/argocd-targetgroupbinding.yaml"
     )
 
     for file in "${injected_files[@]}"; do

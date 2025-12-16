@@ -10,7 +10,7 @@ set -euo pipefail
 
 apply_inject_eso_role() {
     local gitops_dir="${GITOPS_DIR:-/home/liav/github/quiz-app/gitops}"
-    local eso_app_file="$gitops_dir/applications/external-secrets.yaml"
+    local eso_app_file="$gitops_dir/apps/platform/external-secrets.yaml"
     
     log_message "Injecting ESO IRSA role ARN into external-secrets Application..."
     

@@ -1,12 +1,21 @@
 # Installing EKS cluster addons: CNI, CoreDNS, Kube-proxy
 
 # VPC CNI - Must be installed first for networking
+# Prefix delegation enabled to increase pod capacity per node
+# t3.medium: 17 pods (default) -> 110 pods (with prefix delegation)
 resource "aws_eks_addon" "vpc_cni" {
   cluster_name                = var.cluster_name
   addon_name                  = "vpc-cni"
   addon_version               = data.aws_eks_addon_version.vpc_cni.version
   resolve_conflicts_on_create = "OVERWRITE"
-  resolve_conflicts_on_update = "PRESERVE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  configuration_values = jsonencode({
+    env = {
+      ENABLE_PREFIX_DELEGATION = "true"
+      WARM_PREFIX_TARGET       = "1"
+    }
+  })
 
   tags = {
     Name = "${var.cluster_name}-vpc-cni"

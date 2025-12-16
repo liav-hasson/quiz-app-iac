@@ -17,6 +17,23 @@ module "eks_managed_node_groups" {
   capacity_type  = each.value.capacity_type
   subnet_ids     = var.subnet_ids
 
+  # Configure max-pods for VPC CNI prefix delegation
+  # Required for AL2023 AMI to recognize increased pod capacity
+  cloudinit_pre_nodeadm = [
+    {
+      content_type = "application/node.eks.aws"
+      content      = <<-EOT
+        ---
+        apiVersion: node.eks.aws/v1alpha1
+        kind: NodeConfig
+        spec:
+          kubelet:
+            config:
+              maxPods: 110
+      EOT
+    }
+  ]
+
   iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }

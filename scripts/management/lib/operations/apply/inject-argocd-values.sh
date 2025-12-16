@@ -78,72 +78,72 @@ inject_terraform_values() {
     # Update ALB Controller IRSA (replace the value line after role-arn)
     log_info "Updating AWS Load Balancer Controller IRSA..."
     sed -i "s|value: \".*\" # Injected by Terraform|value: \"$ALB_ROLE\" # Injected by Terraform|g" \
-      applications/aws-load-balancer-controller.yaml
+      apps/platform/aws-load-balancer-controller.yaml
     
     # Update External Secrets IRSA (replace the value line after role-arn)
     log_info "Updating External Secrets Operator IRSA..."
     sed -i "s|value: \".*\" # Injected by Terraform|value: \"$ESO_ROLE\" # Injected by Terraform|g" \
-      applications/external-secrets.yaml
+      apps/platform/external-secrets.yaml
     
     # Update quiz-backend values (replace any existing value)
   if [[ -n "$BACKEND_TG_ARN" ]]; then
         log_info "Updating Quiz Backend TargetGroupBinding ARN..."
     sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$BACKEND_TG_ARN\" # Injected by Terraform|g" \
-          quiz-backend/values.yaml
+          charts/workloads/quiz-backend/values.yaml
     fi
 
   if [[ -n "$FRONTEND_TG_ARN" ]]; then
     log_info "Updating Quiz Frontend TargetGroupBinding ARN..."
     sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$FRONTEND_TG_ARN\" # Injected by Terraform|g" \
-      quiz-frontend/values.yaml
+      charts/workloads/quiz-frontend/values.yaml
   fi
 
     # Update quiz-backend DEV values
     if [[ -n "$BACKEND_DEV_TG_ARN" ]]; then
         log_info "Updating Quiz Backend DEV TargetGroupBinding ARN..."
         sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$BACKEND_DEV_TG_ARN\" # Injected by Terraform|g" \
-          quiz-backend/values-dev.yaml
+          charts/workloads/quiz-backend/values-dev.yaml
     fi
 
     # Update quiz-frontend DEV values
     if [[ -n "$FRONTEND_DEV_TG_ARN" ]]; then
         log_info "Updating Quiz Frontend DEV TargetGroupBinding ARN..."
         sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$FRONTEND_DEV_TG_ARN\" # Injected by Terraform|g" \
-          quiz-frontend/values-dev.yaml
+          charts/workloads/quiz-frontend/values-dev.yaml
     fi
     
     # Update ArgoCD TargetGroupBinding (replace any existing value)
     if [[ -n "$ARGOCD_TG_ARN" ]]; then
         log_info "Updating ArgoCD TargetGroupBinding ARN..."
         sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$ARGOCD_TG_ARN\" # Injected by Terraform|g" \
-          prerequisites/argocd-targetgroupbinding.yaml
+          charts/platform/prerequisites/argocd-targetgroupbinding.yaml
     fi
     
     # Update Grafana TargetGroupBinding (replace any existing value)
     if [[ -n "$GRAFANA_TG_ARN" ]]; then
         log_info "Updating Grafana TargetGroupBinding ARN..."
         sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$GRAFANA_TG_ARN\" # Injected by Terraform|g" \
-          prerequisites/grafana-targetgroupbinding.yaml
+          charts/platform/prerequisites/grafana-targetgroupbinding.yaml
     fi
     
     # Update Loki TargetGroupBinding (replace any existing value)
     if [[ -n "$LOKI_TG_ARN" ]]; then
         log_info "Updating Loki TargetGroupBinding ARN..."
         sed -i "s|targetGroupARN: \".*\" # Injected by Terraform|targetGroupARN: \"$LOKI_TG_ARN\" # Injected by Terraform|g" \
-          prerequisites/loki-targetgroupbinding.yaml
+          charts/platform/prerequisites/loki-targetgroupbinding.yaml
     fi
     
     # Update security group IDs (replace any existing value)
     if [[ -n "$ALB_SG_ID" ]]; then
         log_info "Updating ALB Security Group IDs..."
         sed -i "s|groupID: \".*\" # Injected by Terraform|groupID: \"$ALB_SG_ID\" # Injected by Terraform|g" \
-          quiz-backend/values.yaml \
-          quiz-frontend/values.yaml \
-          quiz-backend/values-dev.yaml \
-          quiz-frontend/values-dev.yaml \
-          prerequisites/argocd-targetgroupbinding.yaml \
-          prerequisites/grafana-targetgroupbinding.yaml \
-          prerequisites/loki-targetgroupbinding.yaml
+          charts/workloads/quiz-backend/values.yaml \
+          charts/workloads/quiz-frontend/values.yaml \
+          charts/workloads/quiz-backend/values-dev.yaml \
+          charts/workloads/quiz-frontend/values-dev.yaml \
+          charts/platform/prerequisites/argocd-targetgroupbinding.yaml \
+          charts/platform/prerequisites/grafana-targetgroupbinding.yaml \
+          charts/platform/prerequisites/loki-targetgroupbinding.yaml
     fi
     
     # Note: EBS CSI Driver role is managed directly in Terraform addon resource
