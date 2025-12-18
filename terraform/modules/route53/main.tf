@@ -53,19 +53,13 @@ data "aws_route53_zone" "public" {
 
 # ACM Certificate for HTTPS
 # Validates via DNS in the public hosted zone
+# Uses wildcard to cover all subdomains
 resource "aws_acm_certificate" "main" {
   count = var.public_zone_enabled ? 1 : 0
 
-  domain_name = var.quiz_app_subdomain
-  subject_alternative_names = [
-    var.quiz_app_dev_subdomain,
-    var.argocd_subdomain,
-    var.jenkins_subdomain,
-    var.grafana_subdomain,
-    var.loki_subdomain,
-    var.kiali_subdomain
-  ]
-  validation_method = "DNS"
+  domain_name               = var.public_domain
+  subject_alternative_names = ["*.${var.public_domain}"]
+  validation_method         = "DNS"
 
   tags = merge(
     var.common_tags,
