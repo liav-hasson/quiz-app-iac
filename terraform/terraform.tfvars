@@ -8,7 +8,7 @@
 # AWS Configuration
 # =============================================================================
 aws_region  = "eu-north-1"
-aws_profile = "liav"  # AWS account 937137607178
+aws_profile = "liav" # AWS account 937137607178
 
 # =============================================================================
 # Project Configuration
@@ -35,7 +35,7 @@ nat_volume_size   = 8
 # =============================================================================
 # Jenkins Controller Configuration
 # =============================================================================
-jenkins_ami_id        = "ami-0cc9958b4468ab1cc" # Jenkins golden AMI
+jenkins_ami_id        = "ami-0e880288513aa1a37" # Jenkins golden AMI
 jenkins_instance_type = "t3.small"
 jenkins_volume_size   = 14
 
@@ -89,15 +89,16 @@ ssm_parameter_prefix = "/devops-quiz"
 private_domain_name = "weatherlabs.internal"
 
 # Public hosted zone (external DNS)
-public_zone_enabled     = true
-public_zone_id          = "Z021766126QLMQTJA7Q56" # weatherlabs.org hosted zone
-public_domain           = "weatherlabs.org"
-quiz_app_subdomain      = "quiz.weatherlabs.org"     # Quiz app public URL
-quiz_app_dev_subdomain  = "dev-quiz.weatherlabs.org" # Quiz app DEV public URL
-argocd_subdomain        = "argocd.weatherlabs.org"   # ArgoCD public URL
-jenkins_subdomain       = "jenkins.weatherlabs.org"  # Jenkins public URL
-grafana_subdomain       = "grafana.weatherlabs.org"  # Grafana public URL
-loki_subdomain          = "loki.weatherlabs.org"     # Loki public URL
+public_zone_enabled    = true
+public_zone_id         = "Z021766126QLMQTJA7Q56" # weatherlabs.org hosted zone
+public_domain          = "weatherlabs.org"
+quiz_app_subdomain     = "quiz.weatherlabs.org"     # Quiz app public URL
+quiz_app_dev_subdomain = "dev-quiz.weatherlabs.org" # Quiz app DEV public URL
+argocd_subdomain       = "argocd.weatherlabs.org"   # ArgoCD public URL
+jenkins_subdomain      = "jenkins.weatherlabs.org"  # Jenkins public URL
+grafana_subdomain      = "grafana.weatherlabs.org"  # Grafana public URL
+loki_subdomain         = "loki.weatherlabs.org"     # Loki public URL
+kiali_subdomain        = "kiali.weatherlabs.org"    # Kiali public URL
 
 # =============================================================================
 # Tags

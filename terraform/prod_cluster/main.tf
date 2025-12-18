@@ -49,26 +49,11 @@ module "security_groups" {
   depends_on = [module.eks_cluster, module.node_groups]
 }
 
-# Application Load Balancer (for EKS services and Jenkins)
-module "alb" {
-  source = "./alb"
-
-  project_name               = var.cluster_name
-  cluster_name               = var.cluster_name
-  vpc_id                     = var.vpc_id
-  public_subnet_ids          = var.public_subnets
-  certificate_arn            = var.certificate_arn
-  jenkins_instance_id        = var.jenkins_instance_id
-  common_tags                = var.tags
-  enable_deletion_protection = false
-  quiz_app_host              = var.quiz_app_host
-  quiz_app_dev_host          = var.quiz_app_dev_host
-  quiz_backend_path_patterns = var.quiz_backend_path_patterns
-  argocd_host                = var.argocd_host
-  jenkins_host               = var.jenkins_host
-  grafana_host               = var.grafana_host
-  loki_host                  = var.loki_host
-  enable_https               = var.enable_https
-
-  depends_on = [module.eks_cluster, module.node_groups]
-}
+# =============================================================================
+# NOTE: ALB module removed - migrated to Istio Service Mesh
+# =============================================================================
+# Traffic routing is now handled by:
+# - Istio Ingress Gateway (NLB provisioned by AWS LB Controller)
+# - Istio VirtualServices for routing rules
+# - DNS managed via post-deployment script (update-dns.sh)
+# =============================================================================

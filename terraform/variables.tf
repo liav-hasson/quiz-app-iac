@@ -14,7 +14,7 @@ variable "aws_region" {
 variable "aws_profile" {
   description = "AWS CLI profile to use for authentication"
   type        = string
-  default     = null  # Uses default credentials if not specified
+  default     = null # Uses default credentials if not specified
 }
 
 # =============================================================================
@@ -244,6 +244,12 @@ variable "grafana_subdomain" {
 
 variable "loki_subdomain" {
   description = "Full subdomain for Loki (e.g., loki.example.com)"
+  type        = string
+  default     = ""
+}
+
+variable "kiali_subdomain" {
+  description = "Full subdomain for Kiali (e.g., kiali.example.com)"
   type        = string
   default     = ""
 }

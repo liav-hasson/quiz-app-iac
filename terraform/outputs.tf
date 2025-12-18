@@ -111,73 +111,12 @@ output "ebs_csi_driver_role_arn" {
 }
 
 # =============================================================================
-# Application Load Balancer Outputs
+# NOTE: ALB outputs removed - migrated to Istio Service Mesh
 # =============================================================================
-
-output "alb_name" {
-  description = "Name of the Application Load Balancer (for ArgoCD annotations)"
-  value       = module.prod_cluster.alb_name
-}
-
-output "alb_dns_name" {
-  description = "DNS name of the Application Load Balancer"
-  value       = module.prod_cluster.alb_dns_name
-}
-
-output "alb_arn" {
-  description = "ARN of the Application Load Balancer"
-  value       = module.prod_cluster.alb_arn
-}
-
-output "alb_zone_id" {
-  description = "Zone ID of the ALB (for Route53 alias records)"
-  value       = module.prod_cluster.alb_zone_id
-}
-
-output "alb_security_group_id" {
-  description = "Security group ID of the ALB"
-  value       = module.prod_cluster.alb_security_group_id
-}
-
-output "quiz_backend_target_group_arn" {
-  description = "ARN of the quiz backend target group for TargetGroupBinding"
-  value       = module.prod_cluster.quiz_backend_target_group_arn
-}
-
-output "quiz_frontend_target_group_arn" {
-  description = "ARN of the quiz frontend target group for TargetGroupBinding"
-  value       = module.prod_cluster.quiz_frontend_target_group_arn
-}
-
-output "quiz_app_target_group_arn" {
-  description = "(Deprecated) ARN of the quiz app target group"
-  value       = module.prod_cluster.quiz_app_target_group_arn
-}
-
-output "argocd_target_group_arn" {
-  description = "ARN of the ArgoCD target group for TargetGroupBinding"
-  value       = module.prod_cluster.argocd_target_group_arn
-}
-
-output "grafana_target_group_arn" {
-  description = "ARN of the Grafana target group for TargetGroupBinding"
-  value       = module.prod_cluster.grafana_target_group_arn
-}
-
-output "loki_target_group_arn" {
-  description = "ARN of the Loki target group for TargetGroupBinding"
-  value       = module.prod_cluster.loki_target_group_arn
-}
-
-output "quiz_backend_dev_target_group_arn" {
-  description = "ARN of the quiz backend DEV target group for TargetGroupBinding"
-  value       = module.prod_cluster.quiz_backend_dev_target_group_arn
-}
-
-output "quiz_frontend_dev_target_group_arn" {
-  description = "ARN of the quiz frontend DEV target group for TargetGroupBinding"
-  value       = module.prod_cluster.quiz_frontend_dev_target_group_arn
-}
+# The NLB is now provisioned by the AWS Load Balancer Controller based on
+# the Istio Ingress Gateway service annotations. DNS records are managed
+# via the post-deployment script (update-dns.sh).
+# =============================================================================
 
 # =============================================================================
 # DNS & Certificate Outputs
@@ -196,6 +135,20 @@ output "quiz_app_url" {
 output "argocd_url" {
   description = "Public URL for ArgoCD"
   value       = module.route53.argocd_url
+}
+
+# =============================================================================
+# Route53 DNS Outputs (for Istio NLB DNS update)
+# =============================================================================
+
+output "public_zone_id" {
+  description = "ID of the public hosted zone for DNS updates"
+  value       = module.route53.public_zone_id
+}
+
+output "public_domain" {
+  description = "Public domain name (e.g., weatherlabs.org)"
+  value       = module.route53.public_zone_name
 }
 
 # =============================================================================

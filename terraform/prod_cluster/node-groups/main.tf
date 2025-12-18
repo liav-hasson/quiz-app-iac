@@ -17,6 +17,9 @@ module "eks_managed_node_groups" {
   capacity_type  = each.value.capacity_type
   subnet_ids     = var.subnet_ids
 
+  # Explicitly set AMI type for AL2023 - REQUIRED for cloudinit_pre_nodeadm to work!
+  ami_type = "AL2023_x86_64_STANDARD"
+
   # Configure max-pods for VPC CNI prefix delegation
   # Required for AL2023 AMI to recognize increased pod capacity
   cloudinit_pre_nodeadm = [

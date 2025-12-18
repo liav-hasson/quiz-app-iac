@@ -61,7 +61,9 @@ resource "aws_acm_certificate" "main" {
     var.quiz_app_dev_subdomain,
     var.argocd_subdomain,
     var.jenkins_subdomain,
-    var.grafana_subdomain
+    var.grafana_subdomain,
+    var.loki_subdomain,
+    var.kiali_subdomain
   ]
   validation_method = "DNS"
 

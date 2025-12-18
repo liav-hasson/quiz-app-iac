@@ -66,68 +66,10 @@ output "security_rules_created" {
   value       = module.security_groups.security_rules_created
 }
 
-# ALB Outputs
-output "alb_arn" {
-  description = "ARN of the Application Load Balancer"
-  value       = module.alb.alb_arn
-}
-
-output "alb_dns_name" {
-  description = "DNS name of the Application Load Balancer"
-  value       = module.alb.alb_dns_name
-}
-
-output "alb_zone_id" {
-  description = "Zone ID of the Application Load Balancer"
-  value       = module.alb.alb_zone_id
-}
-
-output "alb_name" {
-  description = "Name of the Application Load Balancer (for ArgoCD annotations)"
-  value       = module.alb.alb_name
-}
-
-output "alb_security_group_id" {
-  description = "Security group ID of the ALB"
-  value       = module.alb.alb_security_group_id
-}
-
-output "quiz_backend_target_group_arn" {
-  description = "ARN of the quiz backend target group for TargetGroupBinding"
-  value       = module.alb.quiz_backend_target_group_arn
-}
-
-output "quiz_frontend_target_group_arn" {
-  description = "ARN of the quiz frontend target group for TargetGroupBinding"
-  value       = module.alb.quiz_frontend_target_group_arn
-}
-
-output "argocd_target_group_arn" {
-  description = "ARN of the ArgoCD target group for TargetGroupBinding"
-  value       = module.alb.argocd_target_group_arn
-}
-
-output "grafana_target_group_arn" {
-  description = "ARN of the Grafana target group for TargetGroupBinding"
-  value       = module.alb.grafana_target_group_arn
-}
-
-output "loki_target_group_arn" {
-  description = "ARN of the Loki target group for TargetGroupBinding"
-  value       = module.alb.loki_target_group_arn
-}
-
-output "quiz_app_target_group_arn" {
-  description = "(Deprecated) ARN of the quiz app target group"
-  value       = module.alb.quiz_app_target_group_arn
-}
-
-output "quiz_backend_dev_target_group_arn" {
-  description = "ARN of the quiz backend DEV target group for TargetGroupBinding"
-  value       = module.alb.quiz_backend_dev_target_group_arn
-}
-
-output "quiz_frontend_dev_target_group_arn" {
-  description = "ARN of the quiz frontend DEV target group for TargetGroupBinding"
-  value       = module.alb.quiz_frontend_dev_target_group_arn
-}
+# =============================================================================
+# NOTE: ALB outputs removed - migrated to Istio Service Mesh
+# =============================================================================
+# The NLB is now provisioned by the AWS Load Balancer Controller based on
+# the Istio Ingress Gateway service annotations. DNS records are managed
+# via the post-deployment script (update-dns.sh).
+# =============================================================================

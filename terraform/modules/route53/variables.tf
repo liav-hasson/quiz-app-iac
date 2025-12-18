@@ -82,3 +82,15 @@ variable "grafana_subdomain" {
   type        = string
   default     = ""
 }
+
+variable "loki_subdomain" {
+  description = "Subdomain for Loki (e.g., loki.example.com)"
+  type        = string
+  default     = ""
+}
+
+variable "kiali_subdomain" {
+  description = "Subdomain for Kiali (e.g., kiali.example.com)"
+  type        = string
+  default     = ""
+}
