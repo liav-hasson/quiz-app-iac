@@ -27,8 +27,9 @@ This repository contains the Terraform and supporting docs that stand up the Qui
 ## Usage
 1. Work from `terraform/` (Terraform >= 1.x, AWS credentials configured).
 2. Update variables in `terraform/terraform.tfvars` as needed.
-3. Run `terraform init`, `terraform plan`, and `terraform apply` to provision the stack.
+3. Update and run the management scripts (manage-project --apply)
 
 ## Architecture diagram
-
+> [!NOTE]  
+> TODO: Update diagram
 <img src="diagram.png">
