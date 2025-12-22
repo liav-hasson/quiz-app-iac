@@ -1,0 +1,70 @@
+#!/bin/bash
+# manage-project
+# Main entry point for infrastructure provisioning and management.
+#
+# Usage:
+#   manage-project --apply    Deploy infrastructure and configure GitOps
+#   manage-project --destroy  Tear down all infrastructure
+#   manage-project --validate Validate configuration and connectivity
+
+# Resolve script location and source core
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../lib/core/init.sh"
+
+# =============================================================================
+# Main Execution
+# =============================================================================
+
+show_help() {
+    echo ""
+    echo "Quiz App Infrastructure Management"
+    echo "==================================="
+    echo ""
+    echo "Usage: manage-project <command>"
+    echo ""
+    echo "Commands:"
+    echo "  --apply,    -a     Deploy infrastructure and configure GitOps"
+    echo "  --destroy,  -d     Tear down all infrastructure"
+    echo "  --validate, -v     Validate charts, connectivity, and configuration"
+    echo "  --help,     -h     Show this help"
+    echo ""
+    echo "Infrastructure: EKS cluster, Jenkins, ALB, Route53, ArgoCD, Istio"
+    echo ""
+    echo "Log file: $LOG_FILE"
+    echo ""
+}
+
+main() {
+    local command="${1:-help}"
+    
+    case "$command" in
+        --apply|-a)
+            log_step "Starting Apply Workflow"
+            print_log_location
+            source "$WORKFLOWS_DIR/apply.sh"
+            workflow_apply
+            ;;
+        --destroy|-d)
+            log_step "Starting Destroy Workflow"
+            print_log_location
+            source "$WORKFLOWS_DIR/destroy.sh"
+            workflow_destroy
+            ;;
+        --validate|-v)
+            log_step "Starting Validation"
+            source "$WORKFLOWS_DIR/validate.sh"
+            workflow_validate
+            ;;
+        --help|-h|help|"")
+            show_help
+            exit 0
+            ;;
+        *)
+            log_error "Unknown command: $command"
+            show_help
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

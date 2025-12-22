@@ -35,7 +35,7 @@ nat_volume_size   = 8
 # =============================================================================
 # Jenkins Controller Configuration
 # =============================================================================
-jenkins_ami_id        = "ami-0e880288513aa1a37" # Jenkins golden AMI
+jenkins_ami_id        = "ami-02def4b9755a63112" # Jenkins golden AMI
 jenkins_instance_type = "t3.small"
 jenkins_volume_size   = 14
 

@@ -1,0 +1,276 @@
+#!/bin/bash
+# project-utils
+# Utility commands for cluster access and management.
+#
+# Usage:
+#   project-utils --access    Show cluster access information
+#   project-utils --argocd    Show ArgoCD status
+#   project-utils --jenkins   Get Jenkins EKS credentials
+#   project-utils --open      Open web UIs in browser
+
+# Resolve script location and source core
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../lib/core/init.sh"
+
+# Disable strict mode for interactive utility
+set +e
+
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+# Read Terraform output if state exists
+tf_output() {
+    local key="$1"
+    if [[ -d "$TERRAFORM_DIR" && -f "$TERRAFORM_DIR/terraform.tfstate" ]]; then
+        (cd "$TERRAFORM_DIR" && terraform output -raw "$key" 2>/dev/null) || echo ""
+    fi
+}
+
+# Get hostnames from Terraform or use defaults
+get_quiz_host() {
+    local url
+    url=$(tf_output quiz_app_url)
+    if [[ -n "$url" ]]; then
+        echo "${url#https://}" | tr -d '/'
+    else
+        echo "$DEFAULT_QUIZ_HOST"
+    fi
+}
+
+get_argocd_host() {
+    local url
+    url=$(tf_output argocd_url)
+    if [[ -n "$url" ]]; then
+        echo "${url#https://}" | tr -d '/'
+    else
+        echo "$DEFAULT_ARGOCD_HOST"
+    fi
+}
+
+# =============================================================================
+# Commands
+# =============================================================================
+
+show_cluster_access() {
+    log_info "Fetching cluster access information..."
+    
+    local quiz_host argocd_host
+    quiz_host=$(get_quiz_host)
+    argocd_host=$(get_argocd_host)
+    
+    echo ""
+    echo "================================="
+    echo "Quiz App DevOps - Cluster Access"
+    echo "================================="
+    echo ""
+    echo "EKS Cluster Access:"
+    echo "  Cluster:     $EKS_CLUSTER_NAME"
+    echo "  Region:      $AWS_REGION"
+    echo "  Kubeconfig:  aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION"
+    echo ""
+    echo "Application URLs:"
+    echo "  Quiz App:    https://$quiz_host"
+    echo "  ArgoCD UI:   https://$argocd_host"
+    echo "  Jenkins UI:  https://$DEFAULT_JENKINS_HOST"
+    echo ""
+    
+    # Get ArgoCD password
+    echo "ArgoCD Credentials:"
+    if kubectl get secret argocd-initial-admin-secret -n argocd &>/dev/null; then
+        local password
+        password=$(kubectl get secret argocd-initial-admin-secret -n argocd \
+            -o jsonpath='{.data.password}' 2>/dev/null | base64 -d 2>/dev/null)
+        echo "  Username: admin"
+        if [[ -n "$password" ]]; then
+            echo "  Password: $password"
+        else
+            echo "  Password: (unable to decode)"
+        fi
+    else
+        echo "  Status: ArgoCD not deployed or secret not found"
+    fi
+    echo ""
+}
+
+show_argocd_status() {
+    log_info "Checking ArgoCD status..."
+    
+    local argocd_host
+    argocd_host=$(get_argocd_host)
+    
+    echo ""
+    echo "================================="
+    echo "ArgoCD Status"
+    echo "================================="
+    echo ""
+
+    if ! kubectl get namespace argocd &>/dev/null; then
+        echo -e "${YELLOW}ArgoCD namespace not found${NC}"
+        echo "Deploy using: manage-project --apply"
+        return 1
+    fi
+    
+    echo -e "${GREEN}[OK]${NC} ArgoCD namespace exists"
+    echo ""
+    
+    # Pod status
+    echo "Pods:"
+    kubectl get pods -n argocd --no-headers 2>/dev/null | while read -r line; do
+        local pod_name pod_status
+        pod_name=$(echo "$line" | awk '{print $1}')
+        pod_status=$(echo "$line" | awk '{print $3}')
+        if [[ "$pod_status" == "Running" ]]; then
+            echo -e "  ${GREEN}[Running]${NC} $pod_name"
+        else
+            echo -e "  ${YELLOW}[$pod_status]${NC} $pod_name"
+        fi
+    done
+    
+    echo ""
+    echo "Applications:"
+    kubectl get applications -n argocd --no-headers 2>/dev/null | while read -r line; do
+        local app_name sync_status health_status
+        app_name=$(echo "$line" | awk '{print $1}')
+        sync_status=$(echo "$line" | awk '{print $2}')
+        health_status=$(echo "$line" | awk '{print $3}')
+        
+        local color="$NC"
+        [[ "$health_status" == "Healthy" ]] && color="$GREEN"
+        [[ "$health_status" == "Degraded" ]] && color="$RED"
+        [[ "$health_status" == "Progressing" ]] && color="$YELLOW"
+        
+        echo -e "  ${color}[$health_status]${NC} $app_name ($sync_status)"
+    done
+    
+    echo ""
+    echo "Access:"
+    echo "  URL:      https://$argocd_host"
+    echo "  Username: admin"
+    
+    local password
+    password=$(kubectl get secret argocd-initial-admin-secret -n argocd \
+        -o jsonpath='{.data.password}' 2>/dev/null | base64 -d 2>/dev/null)
+    [[ -n "$password" ]] && echo "  Password: $password"
+    echo ""
+}
+
+get_jenkins_credentials() {
+    log_info "Getting Jenkins EKS credentials..."
+    
+    echo ""
+    echo "================================="
+    echo "Jenkins EKS Cluster Credentials"
+    echo "================================="
+    echo ""
+    
+    # Check kubectl access
+    if ! kubectl cluster-info &>/dev/null; then
+        echo -e "${RED}[ERROR]${NC} kubectl not configured or cluster unreachable"
+        echo "Run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION"
+        return 1
+    fi
+    
+    # Check for jenkins-token secret
+    if ! kubectl get secret jenkins-token -n jenkins &>/dev/null; then
+        echo -e "${RED}[ERROR]${NC} jenkins-token secret not found"
+        echo "Ensure ArgoCD has deployed jenkins-platform application"
+        return 1
+    fi
+    
+    echo "1. Jenkins EKS Token:"
+    echo "   (For 'jenkins-eks-token' Secret text credential)"
+    echo "================================================================="
+    kubectl get secret jenkins-token -n jenkins -o jsonpath='{.data.token}' | base64 -d
+    echo ""
+    echo "================================================================="
+    echo ""
+    
+    echo "2. Kubernetes API Server URL:"
+    echo "   (For Kubernetes Cloud 'Kubernetes URL' field)"
+    echo "================================================================="
+    kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}'
+    echo ""
+    echo "================================================================="
+    echo ""
+    
+    echo "3. Kubernetes CA Certificate:"
+    echo "   (For Kubernetes Cloud 'server certificate key' field)"
+    echo "================================================================="
+    kubectl get secret jenkins-token -n jenkins -o jsonpath='{.data.ca\.crt}' | base64 -d
+    echo ""
+    echo "================================================================="
+    echo ""
+}
+
+open_web_uis() {
+    local quiz_host argocd_host
+    quiz_host=$(get_quiz_host)
+    argocd_host=$(get_argocd_host)
+    
+    local quiz_url="https://$quiz_host"
+    local argocd_url="https://$argocd_host"
+    local jenkins_url="https://$DEFAULT_JENKINS_HOST"
+    
+    echo ""
+    echo "Opening Web UIs"
+    echo "---------------"
+    echo "Quiz App: $quiz_url"
+    echo "ArgoCD:   $argocd_url"
+    echo "Jenkins:  $jenkins_url"
+    echo ""
+    
+    # Detect browser command
+    local browser_cmd=""
+    if command -v xdg-open &>/dev/null; then
+        browser_cmd="xdg-open"
+    elif command -v open &>/dev/null; then
+        browser_cmd="open"
+    fi
+    
+    if [[ -n "$browser_cmd" ]]; then
+        "$browser_cmd" "$quiz_url" 2>/dev/null &
+        "$browser_cmd" "$argocd_url" 2>/dev/null &
+        "$browser_cmd" "$jenkins_url" 2>/dev/null &
+        echo -e "${GREEN}[OK]${NC} Opened in browser"
+    else
+        echo -e "${YELLOW}[WARN]${NC} No browser command found. Open URLs manually."
+    fi
+}
+
+show_help() {
+    echo ""
+    echo "Quiz App DevOps - Project Utilities"
+    echo "===================================="
+    echo ""
+    echo "Usage: project-utils <command>"
+    echo ""
+    echo "Commands:"
+    echo "  --access,   -a     Show cluster access information"
+    echo "  --argocd,   -r     Show ArgoCD status and applications"
+    echo "  --jenkins,  -j     Get Jenkins EKS credentials"
+    echo "  --open,     -o     Open web UIs in browser"
+    echo "  --help,     -h     Show this help"
+    echo ""
+}
+
+# =============================================================================
+# Main
+# =============================================================================
+
+main() {
+    case "${1:-help}" in
+        --access|-a)   show_cluster_access ;;
+        --argocd|-r)   show_argocd_status ;;
+        --jenkins|-j)  get_jenkins_credentials ;;
+        --open|-o)     open_web_uis ;;
+        --help|-h|"")  show_help ;;
+        *)
+            echo -e "${RED}Unknown option: $1${NC}"
+            show_help
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

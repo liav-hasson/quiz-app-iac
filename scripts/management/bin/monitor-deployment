@@ -1,0 +1,197 @@
+#!/bin/bash
+# monitor-deployment
+# Monitor deployment logs in real-time.
+#
+# Usage:
+#   monitor-deployment           Follow logs in real-time
+#   monitor-deployment --status  Show log file status
+#   monitor-deployment --tail N  Show last N lines
+#   monitor-deployment --clear   Clear log file
+
+# Resolve script location and source core
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../lib/core/init.sh"
+
+# Disable error trap for interactive monitoring
+set +e
+
+# =============================================================================
+# Functions
+# =============================================================================
+
+show_help() {
+    echo ""
+    echo "Quiz-App Deployment Monitor"
+    echo "============================"
+    echo ""
+    echo "Usage: monitor-deployment [options]"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help      Show this help and exit"
+    echo "  -s, --status    Show log file status"
+    echo "  -t, --tail N    Display the last N lines (default: 50)"
+    echo "  -f, --follow    Follow logs in real-time (default action)"
+    echo "  -c, --clear     Clear log file"
+    echo ""
+    echo "Log file: $LOG_FILE"
+    echo ""
+}
+
+show_status() {
+    echo ""
+    echo "Log File Status"
+    echo "---------------"
+    
+    if [[ ! -f "$LOG_FILE" ]]; then
+        echo -e "${YELLOW}Status:${NC} Log file does not exist"
+        echo -e "${BLUE}Path:${NC}   $LOG_FILE"
+        return
+    fi
+    
+    local size
+    size=$(stat -c %s "$LOG_FILE" 2>/dev/null || echo "0")
+    local lines
+    lines=$(wc -l < "$LOG_FILE" 2>/dev/null || echo "0")
+    local modified
+    modified=$(stat -c %y "$LOG_FILE" 2>/dev/null | cut -d. -f1 || echo "unknown")
+    
+    local age_seconds
+    age_seconds=$(( $(date +%s) - $(stat -c %Y "$LOG_FILE" 2>/dev/null || echo "0") ))
+    
+    local status_color="$CYAN"
+    local status_text="IDLE"
+    if (( age_seconds <= 60 )); then
+        status_color="$GREEN"
+        status_text="ACTIVE"
+    elif (( age_seconds <= 300 )); then
+        status_color="$YELLOW"
+        status_text="RECENT"
+    fi
+    
+    echo -e "${BLUE}Path:${NC}     $LOG_FILE"
+    echo -e "${BLUE}Size:${NC}     $size bytes ($lines lines)"
+    echo -e "${BLUE}Modified:${NC} $modified"
+    echo -e "${BLUE}Status:${NC}   ${status_color}${status_text}${NC}"
+    echo ""
+}
+
+tail_logs() {
+    local lines="${1:-50}"
+    
+    if [[ ! -f "$LOG_FILE" ]]; then
+        echo -e "${YELLOW}Log file does not exist yet${NC}"
+        echo "Run 'manage-project --apply' to generate logs"
+        return 1
+    fi
+    
+    echo ""
+    echo "Last $lines lines from $LOG_FILE"
+    echo "--------------------------------"
+    echo ""
+    
+    tail -n "$lines" "$LOG_FILE" | while IFS= read -r line; do
+        colorize_line "$line"
+    done
+}
+
+follow_logs() {
+    if [[ ! -f "$LOG_FILE" ]]; then
+        echo -e "${YELLOW}Log file does not exist yet${NC}"
+        echo "Waiting for logs... (Ctrl+C to exit)"
+        echo ""
+        # Wait for file to appear
+        while [[ ! -f "$LOG_FILE" ]]; do
+            sleep 1
+        done
+    fi
+    
+    echo ""
+    echo "Following $LOG_FILE (Ctrl+C to stop)"
+    echo "-------------------------------------"
+    echo ""
+    
+    tail -f "$LOG_FILE" | while IFS= read -r line; do
+        colorize_line "$line"
+    done
+}
+
+clear_logs() {
+    if [[ -f "$LOG_FILE" ]]; then
+        > "$LOG_FILE"
+        echo -e "${GREEN}[OK]${NC} Log file cleared"
+    else
+        echo -e "${YELLOW}Log file does not exist${NC}"
+    fi
+}
+
+colorize_line() {
+    local line="$1"
+    
+    # Extract components from log line for coloring
+    if [[ "$line" =~ \[ERROR\] ]]; then
+        echo -e "${RED}${line}${NC}"
+    elif [[ "$line" =~ \[WARNING\] ]]; then
+        echo -e "${YELLOW}${line}${NC}"
+    elif [[ "$line" =~ \[SUCCESS\] ]]; then
+        echo -e "${GREEN}${line}${NC}"
+    elif [[ "$line" =~ \[STEP\] ]]; then
+        echo -e "${PURPLE}${line}${NC}"
+    elif [[ "$line" =~ \[CMD_START\] ]]; then
+        echo -e "${CYAN}${line}${NC}"
+    elif [[ "$line" =~ \[CMD_END\].*exit_code=0 ]]; then
+        echo -e "${GREEN}${line}${NC}"
+    elif [[ "$line" =~ \[CMD_END\] ]]; then
+        echo -e "${RED}${line}${NC}"
+    else
+        echo "$line"
+    fi
+}
+
+# =============================================================================
+# Main
+# =============================================================================
+
+main() {
+    local action="follow"
+    local tail_lines=50
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -s|--status)
+                action="status"
+                shift
+                ;;
+            -c|--clear)
+                action="clear"
+                shift
+                ;;
+            -f|--follow)
+                action="follow"
+                shift
+                ;;
+            -t|--tail)
+                action="tail"
+                tail_lines="${2:-50}"
+                shift 2
+                ;;
+            *)
+                echo -e "${RED}Unknown option: $1${NC}"
+                show_help
+                exit 1
+                ;;
+        esac
+    done
+
+    case "$action" in
+        status) show_status ;;
+        clear)  clear_logs ;;
+        tail)   tail_logs "$tail_lines" ;;
+        follow) follow_logs ;;
+    esac
+}
+
+main "$@"
