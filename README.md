@@ -11,7 +11,6 @@ This repository contains the Terraform and supporting docs that stand up the Qui
 - **[Frontend](https://github.com/liav-hasson/quiz-app-frontend.git)** – React UI served by Nginx.
 - **[Backend](https://github.com/liav-hasson/quiz-app-backend.git)** – Flask API and business logic.
 - **[GitOps](https://github.com/liav-hasson/quiz-app-gitops.git)** – ArgoCD app-of-apps for cluster configuration.
-- **[IaC](https://github.com/liav-hasson/quiz-app-iac.git)** – You are here; provisions AWS infrastructure with Terraform.
 - **[Mini version](https://github.com/liav-hasson/quiz-app-mini.git)** – Local or lightweight AWS deployment.
 
 ## Repository layout
