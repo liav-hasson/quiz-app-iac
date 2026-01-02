@@ -217,6 +217,7 @@ _cleanup_namespaces() {
     
     local namespaces=(
         "monitoring"
+        "mongodb"
         "quiz-backend"
         "quiz-frontend"
         "jenkins"
